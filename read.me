@@ -1,0 +1,37 @@
+# Portfolio (Node + Vite + Sass + GSAP)
+
+## Requirements
+- Node.js 18+
+
+## Setup
+```
+npm install
+```
+
+## Development
+```
+npm run dev
+```
+Starts a local server at `http://localhost:5173` with:
+- SCSS compiled automatically
+- Hot style injection (CSS changes apply without a page reload)
+- Full page reload on HTML or JS changes
+
+## Build
+```
+npm run build
+```
+Bundles all pages into `dist/`. The Vite config auto-discovers every `index.html` in the project, so new pages are picked up without any config changes.
+
+## Preview production build
+```
+npm run preview
+```
+
+## Project structure
+- `index.html` — homepage
+- `about/`, `work/`, `photography/`, `writings/` — section pages and case studies
+- `src/style.scss` — global styles, compiled by Vite
+- `src/main.js` — GSAP entrance animations
+- `assets/` — images and media
+- `vite.config.js` — multi-page build config
