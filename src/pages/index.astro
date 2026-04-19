@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'
+import Header from '../components/Header.astro'
+import Hero from '../components/Hero.astro'
+import ProjectCard from '../components/ProjectCard.astro'
+---
+<BaseLayout title="Portfolio">
+  <Header />
+  <Hero
+    headline="Hi, I'm Pablo Noel — Product Designer & Creative Technologist with a focus on Art, Technology & Society"
+    lede="Based in Chile. Working remotely with companies and organizations from all over the world."
+  />
+
+  <section id="work" class="section">
+    <p class="section-label">Some of my latest projects:</p>
+    <div class="cards">
+      <ProjectCard 
+        title="Florida Apartment Scarcity Dashboard" 
+        thumbClass="thumb-map" meta="Product Design, UX Engineering"
+        href="/work/florida-dashboard"
+        />
+      <ProjectCard 
+        title="Data Commons — Google" 
+        thumbClass="thumb-ui" meta="UX Engineering" 
+        href="/work/google-datacommons"
+        />
+      <ProjectCard 
+        title="Digital Resilience Network — Ford Foundation" 
+        thumbClass="thumb-illustration" meta="Creative Technologist, Consultant" 
+        href="/work/drn"
+        />
+      <ProjectCard 
+        title="One Data Agent — One.org" 
+        thumbClass="thumb-dashboard" meta="Product Design, UX Engineering" 
+        href="/work/one-data"
+        />
+    </div>
+  </section>
+
+  <section id="contact" class="section contact">
+    <h2>Let's talk</h2>
+    <p>Email: <a href="mailto:hello@pablonoel.com">hello@pablonoel.com</a></p>
+  </section>
+</BaseLayout>

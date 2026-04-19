@@ -1,0 +1,51 @@
+---
+import ArticleLayout from '../../../layouts/ArticleLayout.astro'
+---
+<ArticleLayout
+  pageTitle="Interface Delegation · Writings"
+  headline="Interface Delegation"
+  lede=""
+  featuredSrc="/assets/writings/interface-delegation/interface-delegation_007.jpeg"
+  featuredAlt="Interface delegation"
+  backHref="/writings/"
+  backLabel="Back to Writings"
+>
+  <p>Interface delegation is a common concept in programming languages like Cobol and Delphi. <em>"Delegation refers to one object relying upon another to provide a specified set of functionalities"</em> — (<a href="https://en.wikipedia.org/wiki/Delegation_%28programming%29">wikipedia</a>), but in our physical world is way more common than we could imagine.</p>
+  <p><strong>Lets see an example:</strong></p>
+  <figure><img alt="" src="/assets/writings/interface-delegation/interface-delegation_007.jpeg" /><figcaption>Sky <a href="https://en.wikipedia.org/wiki/Set-top_box">Set-top box</a> Remote</figcaption></figure>
+  <p>The Sky remote inherits features from the set-top-box device providing the user physical access to complete tasks and perform actions.</p>
+  <figure><img alt="" src="/assets/writings/interface-delegation/interface-delegation_003.jpeg" /><figcaption>Sky UI</figcaption></figure>
+  <p>Meanwhile the interface on the TV provides feedback about what you should do with your remote to interact with it.</p>
+  <h4>But why this matters in design?</h4>
+  <p>Interfaces are extensions of our capabilities, either physical or cognitive. They allow us to execute a really wide range of tasks in a more practical or effective way. They could be physical (like the remote) or virtual (like the GUI on the screen).</p>
+  <p>Interface delegation as <em>"one object relying upon another to provide a specified set of functionalities"</em> means we will have two (or more) interfaces to interact with.</p>
+  <p>But sometimes this situation always ends up in something like this:</p>
+  <figure><img alt="" src="/assets/writings/interface-delegation/interface-delegation_001.jpeg" /></figure>
+  <h4>The "grandma" paradigm</h4>
+  <p>The "grandma" paradigm is nothing but an answer to the basic question: "how will user actually use this".</p>
+  <p>Our job as designers should always derive from the exhaustive analysis of data. User research, user journeys, interaction analysis, etc.</p>
+  <p>Most of "grandma" nightmares born when we "delegate interfaces" from one device to another in order "to provide more control" or "solve every single user scenario"</p>
+  <h4>But lets see another example:</h4>
+  <figure><img alt="" src="/assets/writings/interface-delegation/interface-delegation_002.png" /><figcaption>Apple TV Remote (latest generation)</figcaption></figure>
+  <p>The Apple remote features only two main blocks of inputs, a touch surface and an array of action buttons that controls the main interface (this one includes a voice recognition interface through a microphone)</p>
+  <figure><img alt="" src="/assets/writings/interface-delegation/interface-delegation_005.jpeg" /><figcaption>Apple TV GUI</figcaption></figure>
+  <p>Both interfaces seem to be quite different between each other. Apple interfaces are usually quite simple and straightforward, quite contrary to the typical embedded solution used in most set-top-boxes, but why?!</p>
+  <h4>Research, Design, Testing, Research, Design, Testing…</h4>
+  <p>The TL;DR version is pretty simple, Apple invests on research.</p>
+  <p>The long answer involves vision, respect and methodology, but I'm not going to address that subject now.</p>
+  <h4>Ok, but how it works?</h4>
+  <p>Well, in Design, interface delegation helps users to extend or concentrate their interaction outside the main device, allowing them to be independent from it.</p>
+  <p>A non-digital example could be the "classic manual stick transmission" in cars versus the "modern sync paddle shift" where the user controls an interface that controls a computer who processes the action to move the transmission gears in synchronic order.</p>
+  <figure><img alt="" src="/assets/writings/interface-delegation/interface-delegation_009.jpeg" /></figure>
+  <figure><img alt="" src="/assets/writings/interface-delegation/interface-delegation_004.jpeg" /><figcaption>Manual Stick v/s Manual Paddle Shift</figcaption></figure>
+  <p>In the digital world we can see this all the time. Smartwatches are secondary devices acting as delegated surrogates who allow us to control the main interface, our phones.</p>
+  <h4>I've got it, so when to use it?</h4>
+  <figure><img alt="" src="/assets/writings/interface-delegation/interface-delegation_008.gif" /></figure>
+  <figure><img alt="" src="/assets/writings/interface-delegation/interface-delegation_006.gif" /></figure>
+  <p><em>When you need it!</em></p>
+  <p>No, seriously, Interface delegation is a concept, a tool. It will only make sense when your research shows you need to give the user that solution.</p>
+  <h4>How can I learn more about it?</h4>
+  <p>Here are a couple of articles related to the matter:</p>
+  <p><strong>The Interface Segregation Principle</strong><br /><a href="http://www.objectmentor.com/resources/articles/isp.pdf">http://www.objectmentor.com/resources/articles/isp.pdf</a></p>
+  <p><strong>Delegation Pattern</strong><br /><a href="http://best-practice-software-engineering.ifs.tuwien.ac.at/patterns/delegation.html">http://best-practice-software-engineering.ifs.tuwien.ac.at/patterns/delegation.html</a></p>
+</ArticleLayout>

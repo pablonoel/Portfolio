@@ -1,0 +1,34 @@
+---
+interface Props {
+  title: string
+  href?: string
+  thumbClass?: string
+  thumbSrc?: string
+  thumbAlt?: string
+  meta?: string
+}
+const { title, href, thumbClass = 'thumb-photo', thumbSrc, thumbAlt, meta } = Astro.props
+---
+<article class="card project">
+  {href ? (
+    <a href={href} title="{title}">
+      <div class={`thumb ${thumbClass}`}>
+        {thumbSrc && <img src={thumbSrc} alt={thumbAlt ?? title} loading="lazy" />}
+      </div>
+      <div class="meta">
+        <h3>{title}</h3>
+        {meta && <p>{meta}</p>}
+      </div>
+    </a>
+  ) : (
+    <>
+      <div class={`thumb ${thumbClass}`}>
+        {thumbSrc && <img src={thumbSrc} alt={thumbAlt ?? title} loading="lazy" />}
+      </div>
+      <div class="meta">
+        <h3>{title}</h3>
+        {meta && <p>{meta}</p>}
+      </div>
+    </>
+  )}
+</article>

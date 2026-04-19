@@ -1,4 +1,4 @@
-# Portfolio (Node + Vite + Sass + GSAP)
+# Portfolio (Astro + React + Sass + GSAP)
 
 ## Requirements
 - Node.js 18+
@@ -12,16 +12,13 @@ npm install
 ```
 npm run dev
 ```
-Starts a local server at `http://localhost:5173` with:
-- SCSS compiled automatically
-- Hot style injection (CSS changes apply without a page reload)
-- Full page reload on HTML or JS changes
+Starts a local server at `http://localhost:4321` with hot module replacement.
 
 ## Build
 ```
 npm run build
 ```
-Bundles all pages into `dist/`. The Vite config auto-discovers every `index.html` in the project, so new pages are picked up without any config changes.
+Outputs static files to `dist/`. Astro generates routes from `src/pages/`.
 
 ## Preview production build
 ```
@@ -29,9 +26,35 @@ npm run preview
 ```
 
 ## Project structure
-- `index.html` — homepage
-- `about/`, `work/`, `photography/`, `writings/` — section pages and case studies
-- `src/style.scss` — global styles, compiled by Vite
-- `src/main.js` — GSAP entrance animations
-- `assets/` — images and media
-- `vite.config.js` — multi-page build config
+```
+src/
+  layouts/
+    BaseLayout.astro      — HTML shell (head, fonts, global styles, animations)
+    ArticleLayout.astro   — case study / essay page (hero + featured image + slot)
+  components/
+    Header.astro          — site header and nav
+    Hero.astro            — headline / rule / lede
+    ProjectCard.astro     — card with optional image, link, and meta text
+    PageAnimations.tsx    — React component running GSAP entrance animations (client:load)
+  pages/
+    index.astro
+    about/index.astro
+    work/index.astro
+    work/[project]/index.astro  × 11 case studies
+    writings/index.astro
+    writings/[article]/index.astro  × 3 essays
+    photography/index.astro
+  styles/
+    _variables.sass       — CSS custom properties (colors, sizes, typography)
+    _reset.sass           — box-sizing and body base
+    _layout.sass          — page wrapper, header, hero, sections
+    _components.sass      — cards, gallery, article, misc UI
+  style.sass              — imports all partials
+
+public/
+  assets/                 — images and media, served at /assets/
+```
+
+## Adding a new page
+- **Index page** — create `src/pages/[section]/index.astro`, use `BaseLayout` + `Header` + `Hero` + content.
+- **Case study or essay** — create `src/pages/work/[slug]/index.astro` (or `writings/`), use `ArticleLayout` with `pageTitle`, `headline`, `featuredSrc`, `backHref`, and `backLabel` props. Put the article body in the default slot.

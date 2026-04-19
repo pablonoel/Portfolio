@@ -1,0 +1,96 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import Header from '../../components/Header.astro'
+import Hero from '../../components/Hero.astro'
+---
+<BaseLayout title="About Me">
+  <Header />
+  <Hero
+    headline="About"
+    lede="I'm a Product Designer and Frontend Engineer focused on creating amazing products and services."
+  />
+
+  <section class="section">
+    <p class="section-label">A quick tour</p>
+    <div class="split">
+      <div class="panel">
+        <ul class="link-list">
+          <li><a href="/work/">My Work</a></li>
+          <li><a href="https://pablonoel.com/resume/">My Resume</a></li>
+          <li><a href="https://pablonoel.com/articles/">My Articles</a></li>
+          <li><a href="https://pablonoel.com/analog/">My Passion</a></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <p>
+          I've held a variety of design roles since the late 1990s. I studied Biotechnology,
+          Engineering and Communications, but my love for design was always greater.
+        </p>
+        <p>
+          I'm a passionate photographer who loves to understand and repair old cameras.
+          I'm a devotee of medium format. With some friends we have a podcast where we
+          talk about analog photography.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <p class="section-label">Selected photographs</p>
+    <div class="gallery">
+      <img src="/assets/about/about_001.jpg" alt="Analog photo 1" loading="lazy" />
+      <img src="/assets/about/about_002.jpg" alt="Analog photo 2" loading="lazy" />
+      <img src="/assets/about/about_003.jpg" alt="Analog photo 3" loading="lazy" />
+    </div>
+  </section>
+
+  <section class="section">
+    <p class="section-label">My process</p>
+    <div class="split">
+      <div class="panel">
+        <p>
+          I believe we can't look to the future without understanding our present. Context
+          shapes our ability to foresee what's next. Design should embrace science and art,
+          stand on the shoulders of technology, and look into our history to create a story
+          we can all relate to.
+        </p>
+        <blockquote>"Design is not added value; design is value." — Gui Bonsiepe</blockquote>
+        <p>
+          My background begins with the Ulm Model and grows every day through visionaries
+          such as Bruno Latour, Tomas Maldonado, and Gui Bonsiepe.
+        </p>
+      </div>
+      <div class="panel">
+        <ol class="process">
+          <li>Understand</li>
+          <li>Plan</li>
+          <li>Involve</li>
+          <li>Research</li>
+          <li>Instrumentalize</li>
+          <li>Prototype</li>
+          <li>Test</li>
+          <li>Develop</li>
+          <li>Deliver</li>
+          <li>Refine</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="section contact">
+    <p class="section-label">Contact me</p>
+    <p>
+      I'm looking to work with amazing people and meaningful projects. If you think someone
+      like me would be a good fit, let me know.
+    </p>
+    <p>
+      +56 9 4946 0085<br />
+      <a href="mailto:hello@pablonoel.com">hello@pablonoel.com</a><br />
+      Santiago, Chile
+    </p>
+    <p class="note">
+      All photos featured are mine, except where noted. Profile photos by
+      <a href="http://fernandarequena.com">Fernanda Requena</a>.
+    </p>
+  </section>
+</BaseLayout>

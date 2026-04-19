@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import Header from '../../components/Header.astro'
+import Hero from '../../components/Hero.astro'
+import ArticleCard from '../../components/ArticleCard.astro'
+---
+<BaseLayout title="Writings">
+  <Header />
+  <Hero headline="Writings" lede="Essays and notes from my archive." />
+
+  <section class="section">
+    <p class="section-label">Latest writing</p>
+    <div class="cards">
+      <ArticleCard
+        title="Interface Delegation"
+        href="/writings/interface-delegation/"
+        thumbSrc="/assets/writings/interface-delegation/interface-delegation_007.jpeg"
+        thumbAlt="Interface Delegation"
+      />
+      <ArticleCard
+        title="Technology is hackable"
+        href="/writings/technology-is-hackable/"
+        thumbSrc="/assets/writings/technology-is-hackable/technology-is-hackable_002.webp"
+        thumbAlt="Technology is hackable"
+        meta="It doesn't really matter our point of view on what is technology or what it does. We must accept technology is the biggest construct on our bleep of existence."
+      />
+      <ArticleCard
+        title="Recognition Rather than Recall"
+        href="/writings/recognition-rather-than-recall/"
+        thumbSrc="/assets/writings/recognition-rather-than-recall/recognition-rather-than-recall_002.jpg"
+        thumbAlt="Recognition Rather than Recall"
+        meta="Sync v/s Async — Any communication technology is based in two different but not exclusive concepts: Synchronical and Asynchronous data transference."
+      />
+    </div>
+  </section>
+</BaseLayout>

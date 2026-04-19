@@ -1,0 +1,27 @@
+---
+import BaseLayout from './BaseLayout.astro'
+import Header from '../components/Header.astro'
+import Hero from '../components/Hero.astro'
+
+interface Props {
+  pageTitle: string
+  headline: string
+  lede?: string
+  featuredSrc?: string
+  featuredAlt?: string
+  backHref: string
+  backLabel: string
+}
+const { pageTitle, headline, lede = '', featuredSrc, featuredAlt, backHref, backLabel } = Astro.props
+---
+<BaseLayout title={pageTitle} description={lede || undefined} image={featuredSrc || undefined}>
+  <Header />
+  <Hero headline={headline} lede={lede} />
+  <section class="section work-article">
+    <div class="article">
+      {featuredSrc && <img class="featured-image" src={featuredSrc} alt={featuredAlt} />}
+      <slot />
+    </div>
+    <a class="back-link" href={backHref}>{backLabel}</a>
+  </section>
+</BaseLayout>

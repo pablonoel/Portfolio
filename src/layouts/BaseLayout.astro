@@ -1,0 +1,54 @@
+---
+import '../style.sass'
+import PageAnimations from '../components/PageAnimations'
+
+interface Props {
+  title: string
+  description?: string
+  image?: string
+  canonicalURL?: string
+}
+
+const {
+  title,
+  description = 'Pablo Noel — Product Designer & Creative Technologist.',
+  image = '/assets/og-default.png',
+  canonicalURL = Astro.url.href,
+} = Astro.props
+
+const siteName = 'Pablo Noel'
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary -->
+    <title>{title + ' — ' + siteName}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={image} />
+    <meta property="og:url" content={canonicalURL} />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} />
+
+    <link rel="stylesheet" href="https://use.typekit.net/ynz8mng.css" />
+  </head>
+  <body>
+    <div class="page">
+      <slot />
+    </div>
+    <PageAnimations client:load />
+  </body>
+</html>
