@@ -2,33 +2,20 @@
 interface Props {
   title: string
   href?: string
-  thumbClass?: string
+  cardClass?: string
   thumbSrc?: string
-  thumbAlt?: string
   meta?: string
 }
-const { title, href, thumbClass = 'thumb-photo', thumbSrc, thumbAlt, meta } = Astro.props
+const { title, href, cardClass, thumbSrc, meta } = Astro.props
 ---
-<article class="card project">
-  {href ? (
-    <a href={href} title="{title}">
-      <div class={`thumb ${thumbClass}`}>
-        {thumbSrc && <img src={thumbSrc} alt={thumbAlt ?? title} loading="lazy" />}
-      </div>
-      <div class="meta">
-        <h3>{title}</h3>
-        {meta && <p>{meta}</p>}
-      </div>
-    </a>
-  ) : (
-    <>
-      <div class={`thumb ${thumbClass}`}>
-        {thumbSrc && <img src={thumbSrc} alt={thumbAlt ?? title} loading="lazy" />}
-      </div>
-      <div class="meta">
-        <h3>{title}</h3>
-        {meta && <p>{meta}</p>}
-      </div>
-    </>
-  )}
+<article class={`card project ${cardClass}`}>
+  <a href={href} title={title}>
+    <div class="thumb">
+      {thumbSrc && <img src={thumbSrc} alt={title} loading="lazy" />}
+    </div>
+    <div class="meta">
+      <h3>{title}</h3>
+      {meta && <p>{meta}</p>}
+    </div>
+  </a>
 </article>

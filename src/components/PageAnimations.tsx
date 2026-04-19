@@ -20,10 +20,10 @@ function initTilt() {
     el.addEventListener('pointermove', (e) => {
       if (e.pointerType === 'touch') return
       const { left, top, width, height } = el.getBoundingClientRect()
-      const x = Math.min(Math.max(e.clientX - left, 0), width)
-      const y = Math.min(Math.max(e.clientY - top, 0), height)
-      const yRot =  MAX * ((x - width  / 2) / width)
-      const xRot = -MAX * ((y - height / 2) / height)
+      const x = Math.min(Math.max(e.clientY - top, 0), height)
+      const y = Math.min(Math.max(e.clientX - left, 0), width)
+      const yRot = -MAX * ((y - height / 2) / height) 
+      const xRot =  MAX * ((x - width  / 2) / width)
       setTransform(el, 1.1, xRot, yRot)
     })
 
@@ -50,7 +50,7 @@ export default function PageAnimations() {
       tl.from('.headline', { y: 24, opacity: 0, duration: 0.6 }, '-=0.2')
         .from('.rule', { scaleX: 0, opacity: 0, duration: 0.5, transformOrigin: 'left' }, '-=0.3')
         .from('.lede', { y: 16, opacity: 0, duration: 0.5 }, '-=0.3')
-        .from('.card', { y: 24, opacity: 0, duration: 0.6, stagger: 0.15 }, '-=0.2')
+        .from('.card', { y: 0, opacity: 0, duration: 0.6, stagger: 0.15 }, '-=0.2')
     }
 
     initTilt()
