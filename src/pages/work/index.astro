@@ -4,13 +4,11 @@ import Header from '../../components/Header.astro'
 import Hero from '../../components/Hero.astro'
 import ProjectCard from '../../components/ProjectCard.astro'
 ---
-<BaseLayout title="Featured Work">
+<BaseLayout title="Work">
   <Header />
-  <Hero headline="Work" lede="A selection of projects from my portfolio." />
-
-  <section class="section">
-    <p class="section-label">Selected projects</p>
-    <div class="cards triple">
+  <main class="wrapper">
+    <Hero headline="Work" lede="Selected projects: Product Design, UX Engineering & more." />
+    <section class="cards triple">
       <ProjectCard
         title="Sidewalk Labs, Street Design Principles"
         href="/work/sidewalk-labs-street-design-principles/"
@@ -77,6 +75,6 @@ import ProjectCard from '../../components/ProjectCard.astro'
         thumbSrc="/assets/work/find-eddie-the-skater/find-eddie-the-skater_002.png"
         meta="Product Design, UX Engineering"
       />
-    </div>
-  </section>
+    </section>
+  </main>
 </BaseLayout>

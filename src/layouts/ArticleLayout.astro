@@ -11,17 +11,19 @@ interface Props {
   featuredAlt?: string
   backHref: string
   backLabel: string
+  articleClass: string
 }
-const { pageTitle, headline, lede = '', featuredSrc, featuredAlt, backHref, backLabel } = Astro.props
+const { pageTitle, headline, articleClass, lede = '', featuredSrc, featuredAlt, backHref, backLabel } = Astro.props
 ---
 <BaseLayout title={pageTitle} description={lede || undefined} image={featuredSrc || undefined}>
   <Header />
-  <Hero headline={headline} lede={lede} />
-  <section class="section work-article">
-    <div class="article">
-      {featuredSrc && <img class="featured-image" src={featuredSrc} alt={featuredAlt} />}
-      <slot />
-    </div>
-    <a class="back-link" href={backHref}>{backLabel}</a>
-  </section>
+  <main class="wrapper">
+    <section class="section">
+      <Hero headline={headline} lede={lede} />
+      <article class={`article ${articleClass}`}>
+        <slot />
+      </article>
+      <a class="back-link" href={backHref}>{backLabel}</a>
+    </section>
+  </main>
 </BaseLayout>

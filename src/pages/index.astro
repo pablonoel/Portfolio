@@ -4,45 +4,57 @@ import Header from '../components/Header.astro'
 import Hero from '../components/Hero.astro'
 import ProjectCard from '../components/ProjectCard.astro'
 ---
-<BaseLayout title="Portfolio">
+<BaseLayout title="Hi, I'm Pablo Noel">
   <Header />
-  <Hero
-    headline="Hi, I'm Pablo Noel — Product Designer & Creative Technologist with a focus on Art, Technology & Society"
-    lede="Based in Chile. Working remotely with companies and organizations from all over the world."
-  />
+  <main id="work" class="wrapper">
 
-  <section id="work" class="section">
-    <p class="section-label">Some of my latest projects:</p>
-    <div class="cards double">
-      <ProjectCard 
-        title="Data Commons — Google" 
-        meta="UX Engineering" 
-        href="/work/google-datacommons"
-        thumbSrc="/assets/home/feat_datacommons.png"
-        />
-      <ProjectCard 
-        title="Florida Apartment Scarcity Dashboard" 
-        meta="Product Design, UX Engineering"
-        href="/work/florida-dashboard"
-        thumbSrc="/assets/home/feat_florida.png"
-        />
-      <ProjectCard 
-        title="Digital Resilience Network — Ford Foundation" 
-        meta="Creative Technologist, Consultant" 
-        href="/work/drn"
-        thumbSrc="/assets/home/feat_drn.png"
-        />
-      <ProjectCard 
-        title="One Data Agent — One.org" 
-        meta="Product Design, UX Engineering" 
-        href="/work/one-data"
-        thumbSrc="/assets/home/feat_onedata.png"
-        />
-    </div>
-  </section>
+    <section class="section">
+      <Hero
+        headline="Hi, I'm Pablo Noel — Product Designer & Creative Technologist with a focus on Art, Technology & Society"
+        lede="Based in Chile, working remotely with teams worlwide"
+      />
 
-  <section id="contact" class="section contact">
-    <h2>Let's talk</h2>
-    <p>Email: <a href="mailto:hello@pablonoel.com">hello@pablonoel.com</a></p>
-  </section>
+      <article class="deck">
+        <h3 class="title">Some of my latest projects:</h3>
+        <div class="cards double">
+          <ProjectCard 
+            title="Data Commons — Google" 
+            meta="UX Engineering" 
+            href="/work/google-datacommons"
+            thumbSrc="/assets/home/feat_datacommons.png"
+            />
+          <ProjectCard 
+            title="Florida Apartment Scarcity Dashboard" 
+            meta="Product Design, UX Engineering"
+            href="/work/florida-dashboard"
+            thumbSrc="/assets/home/feat_florida.png"
+            />
+          <ProjectCard 
+            title="Digital Resilience Network — Ford Foundation" 
+            meta="Creative Technologist, Consultant" 
+            href="/work/drn"
+            thumbSrc="/assets/home/feat_drn.png"
+            />
+          <ProjectCard 
+            title="One Data Agent — One.org" 
+            meta="Product Design, UX Engineering" 
+            href="/work/one-data"
+            thumbSrc="/assets/home/feat_onedata.png"
+            />
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <article class="panel">
+        <h3 class="title">Let's talk</h3>
+        <ul>
+          <li><a href="mailto:hello@pablonoel.com">hello@pablonoel.com</a></li>
+          <li><a href="#">Github</a></li>
+          <li><a href="#">LinkedIn</a></li>
+        </ul>
+      </article>
+    </section>
+
+  </main>
 </BaseLayout>

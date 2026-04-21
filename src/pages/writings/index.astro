@@ -6,11 +6,9 @@ import ArticleCard from '../../components/ArticleCard.astro'
 ---
 <BaseLayout title="Writings">
   <Header />
-  <Hero headline="Writings" lede="Essays and notes from my archive." />
-
-  <section class="section">
-    <p class="section-label">Latest writing</p>
-    <div class="cards triple">
+  <main class="wrapper">
+    <Hero headline="Writings" lede="Essays and notes from my archive." />
+    <section class="cards triple">
       <ArticleCard
         title="Interface Delegation"
         href="/writings/interface-delegation/"
@@ -29,6 +27,6 @@ import ArticleCard from '../../components/ArticleCard.astro'
         thumbSrc="/assets/writings/recognition-rather-than-recall/recognition-rather-than-recall_002.jpg"
         meta="Sync v/s Async — Any communication technology is based in two different but not exclusive concepts: Synchronical and Asynchronous data transference."
       />
-    </div>
-  </section>
+    </section>
+  </main>
 </BaseLayout>
