@@ -1,11 +1,13 @@
 ---
+const { pathname } = Astro.url
+const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href)
 ---
 <header class="site-header">
-  <a class="logo" href="/">@pablonoel</a>
+  <a class="logo" href="/" aria-label="Pablo Noel — Home">@pablonoel</a>
   <nav class="nav">
-    <a href="/about/">About</a>
-    <a href="/work/">Work</a>
-    <a href="/photography/">Photography</a>
-    <a href="/writings/">Writings</a>
+    <a href="/about/" class:list={[{ active: isActive('/about/') }]}>About</a>
+    <a href="/work/" class:list={[{ active: isActive('/work/') }]}>Work</a>
+    <a href="/photography/" class:list={['hidden', { active: isActive('/photography/') }]}>Photography</a>
+    <a href="/writings/" class:list={['hidden', { active: isActive('/writings/') }]}>Writings</a>
   </nav>
 </header>

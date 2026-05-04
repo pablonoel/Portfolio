@@ -4,18 +4,21 @@ import Header from '../components/Header.astro'
 import Hero from '../components/Hero.astro'
 import ProjectCard from '../components/ProjectCard.astro'
 ---
-<BaseLayout title="Hi, I'm Pablo Noel">
+<BaseLayout
+  title="Pablo Noel"
+  description="Product Designer & Creative Technologist based in Chile. I work at the intersection of art, technology, and society — designing products for Google, Ford Foundation, One.org, and more."
+>
   <Header />
   <main id="work" class="wrapper">
 
     <section class="section">
       <Hero
-        headline="Hi, I'm Pablo Noel — Product Designer & Creative Technologist with a focus on Art, Technology & Society"
-        lede="Based in Chile, working remotely with teams worlwide"
+        headline="Hi, I'm Pablo Noel — Product Designer &amp; Creative Technologist with a focus on <span class='typewriter-word'>Art</span>, Technology &amp; Society"
+        lede="Based in Chile, working remotely with teams worldwide"
       />
 
       <article class="deck">
-        <h3 class="title">Some of my latest projects:</h3>
+        <h2 class="title">Some of my latest projects:</h2>
         <div class="cards double">
           <ProjectCard 
             title="Data Commons — Google" 
@@ -38,23 +41,66 @@ import ProjectCard from '../components/ProjectCard.astro'
           <ProjectCard 
             title="One Data Agent — One.org" 
             meta="Product Design, UX Engineering" 
-            href="/work/one-data"
-            thumbSrc="/assets/home/feat_onedata.png"
+            href="/work/one-data-agent"
+            thumbSrc="/assets/home/feat_onedataagent.png"
             />
         </div>
       </article>
     </section>
 
-    <section class="section">
-      <article class="panel">
-        <h3 class="title">Let's talk</h3>
-        <ul>
-          <li><a href="mailto:hello@pablonoel.com">hello@pablonoel.com</a></li>
-          <li><a href="#">Github</a></li>
-          <li><a href="#">LinkedIn</a></li>
-        </ul>
-      </article>
-    </section>
-
   </main>
 </BaseLayout>
+
+<script>
+  const WORDS         = ['Art', 'Data', 'AI', 'People', 'Systems', 'Business']
+  const TYPE_SPEED    = 80   // ms per character
+  const DELETE_SPEED  = 55   // ms per character
+  const DISPLAY_TIME  = 5_000
+
+  let tid: ReturnType<typeof setTimeout> | null = null
+
+  function clear() {
+    if (tid !== null) { clearTimeout(tid); tid = null }
+  }
+
+  function run() {
+    const maybeEl = document.querySelector<HTMLElement>('.typewriter-word')
+    if (!maybeEl) return
+    const el = maybeEl
+
+    let idx = 0
+
+    function del(done: () => void) {
+      const len = (el.textContent ?? '').length
+      if (len === 0) { done(); return }
+      el.textContent = (el.textContent ?? '').slice(0, -1)
+      tid = setTimeout(() => del(done), DELETE_SPEED)
+    }
+
+    function type(word: string, i: number, done: () => void) {
+      el.textContent = word.slice(0, i + 1)
+      if (i < word.length - 1) {
+        tid = setTimeout(() => type(word, i + 1, done), TYPE_SPEED)
+      } else {
+        done()
+      }
+    }
+
+    function cycle() {
+      idx = (idx + 1) % WORDS.length
+      del(() => {
+        tid = setTimeout(() => {
+          type(WORDS[idx], 0, () => {
+            tid = setTimeout(cycle, DISPLAY_TIME)
+          })
+        }, 150)
+      })
+    }
+
+    clear()
+    tid = setTimeout(cycle, DISPLAY_TIME)
+  }
+
+  document.addEventListener('astro:page-load', run)
+  document.addEventListener('astro:before-preparation', clear)
+</script>

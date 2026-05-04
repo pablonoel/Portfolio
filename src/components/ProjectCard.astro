@@ -4,11 +4,12 @@ interface Props {
   href?: string
   cardClass?: string
   thumbSrc?: string
+  status?: string
   meta?: string
 }
-const { title, href, cardClass, thumbSrc, meta } = Astro.props
+const { title, href, cardClass, thumbSrc, meta, status} = Astro.props
 ---
-<article class={`card project ${cardClass}`}>
+<article class={`card project ${cardClass} ${status}`}>
   <a href={href} title={title}>
     <div class="thumb">
       {thumbSrc && <img src={thumbSrc} alt={title} loading="lazy" />}

@@ -9,6 +9,7 @@ body
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 .page
+  margin: 0 auto
   min-height: 100vh
   padding: 3rem var(--page-padding-x) 6rem
   position: relative
@@ -51,15 +52,46 @@ body
     color: var(--color_muted)
     text-decoration: none
     transition: color 0.2s ease
+    padding-bottom: 2px
+    border-bottom: 2px solid transparent
 
     &:hover
       color: var(--color_ink)
+
+    &.active
+      color: var(--color_ink)
+      border-bottom-color: #f5c842
+
+// ─── Breadcrumb ──────────────────────────────────────────────────────────────
+
+.breadcrumb
+  display: flex
+  align-items: center
+  gap: 0.4rem
+  font-size: var(--text-sm)
+  padding: 0.75rem 0 0
+  color: var(--color_muted)
+  margin-bottom: 15px
+
+  a
+    color: var(--color_muted)
+    text-decoration: none
+    transition: color 0.2s ease
+
+    &:hover
+      color: var(--color_underline)
+
+  .breadcrumb-sep
+    opacity: 0.3
+
+  .breadcrumb-current
+    color: var(--color_cursor)
 
 // ─── Hero ────────────────────────────────────────────────────────────────────
 
 .hero
   padding: 6rem 0 4rem 0
-  max-width: 860px
+  max-width: 58rem
   position: relative
   z-index: 1
 
@@ -81,6 +113,34 @@ body
   font-size: var(--text-md)
   line-height: 1.6
 
+.typewriter-word
+  font-style: italic
+  border-bottom: 1px solid var(--color_underline)
+  padding-right: 0.5rem
+  display: inline
+  position: relative
+
+  &::before
+    content: '\A'
+    white-space: pre
+
+  &::after
+    content: ''
+    border-right: 4px solid var(--color_cursor)
+    position: absolute
+    bottom: 0
+    color: inherit
+    animation: tw-blink 0.8s step-end infinite
+    transform: skew(-5deg) translateX(0.25rem)
+    height: var(--headline)
+
+@keyframes tw-blink
+  0%, 100%
+    opacity: 1
+  50%
+    opacity: 0
+
+
 // ─── Sections ────────────────────────────────────────────────────────────────
 
 .section
@@ -96,7 +156,7 @@ body
   display: grid
   gap: 1.5rem
 
-  h3.title
+  h2.title
     font-weight: 100
     font-size: var(--text-rg)
     margin: 0
@@ -135,7 +195,95 @@ body
     color: var(--color_ink)
     font-weight: 600
 
+// ─── Footer ──────────────────────────────────────────────────────────────────
+
+.site-footer
+  margin-top: 6rem
+  padding-top: 3rem
+  border-top: 1px solid var(--color_line)
+  display: flex
+  align-items: center
+  flex-direction: column
+  justify-content: space-between
+  gap: 2rem
+  position: relative
+  z-index: 1
+
+  h2
+    font-weight: 100
+    font-size: var(--text-rg)
+    margin: 0
+    color: var(--color_muted)
+
+  p
+    font-size: var(--text-sm)
+    color: var(--color_darker)
+    margin: 0
+
+.footer-copy
+  display: flex
+  flex-direction: column
+  gap: 0.5rem
+  align-items: center
+
+.social-links
+  list-style: none
+  padding: 0
+  margin: 0
+  display: flex
+  gap: 2rem
+
+  li
+    position: relative
+
+  a
+    position: relative
+    display: flex
+    flex-direction: column
+    align-items: center
+    gap: 0.5rem
+    color: var(--color_darker)
+    text-decoration: none
+    font-size: var(--text-sm)
+    transition: color 0.3s ease-in-out
+
+    &::before
+      content: ''
+      display: block
+      width: 25px
+      height: 25px
+      background-size: contain
+      background-repeat: no-repeat
+      background-position: center
+      transition: transform 0.3s ease-in-out
+
+    &:hover
+      color: var(--color_ink)
+
+    &:hover::before
+      transform: scale(1.4)
+
+  a.social-github::before
+    background-image: url('/assets/icons/icon_github.svg')
+
+  a.social-instagram::before
+    background-image: url('/assets/icons/icon_instagram.svg')
+
+  a.social-medium::before
+    background-image: url('/assets/icons/icon_medium.svg')
+
+  a.social-codepen::before
+    background-image: url('/assets/icons/icon_codepen.svg')
+
+  a.social-linkedin::before
+    background-image: url('/assets/icons/icon_linkedin.svg')
+
 // ─── Responsive ──────────────────────────────────────────────────────────────
+
+@media (max-width: 1440px)
+  .typewriter-word
+    &::before
+      display: none
 
 @media (max-width: 900px)
   .site-header

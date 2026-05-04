@@ -1,0 +1,28 @@
+---
+const { pathname } = Astro.url
+const segments = pathname.replace(/\/$/, '').split('/').filter(Boolean)
+
+const formatLabel = (slug: string) =>
+  slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+
+const crumbs = segments.map((seg, i) => ({
+  label: formatLabel(seg),
+  href: '/' + segments.slice(0, i + 1).join('/') + '/',
+  isLast: i === segments.length - 1,
+}))
+---
+
+{segments.length > 0 && (
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Home</a>
+    {crumbs.map(({ label, href, isLast }) => (
+      <>
+        <span class="breadcrumb-sep" aria-hidden="true">/</span>
+        {isLast
+          ? <span class="breadcrumb-current" aria-current="page">{label}</span>
+          : <a href={href}>{label}</a>
+        }
+      </>
+    ))}
+  </nav>
+)}

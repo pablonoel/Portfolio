@@ -1,6 +1,7 @@
 ---
+import { ClientRouter } from 'astro:transitions'
+import Footer from '../components/Footer.astro'
 import '../style.sass'
-import PageAnimations from '../components/PageAnimations'
 
 interface Props {
   title: string
@@ -17,6 +18,17 @@ const {
 } = Astro.props
 
 const siteName = 'Pablo Noel'
+const pageTitle = title === siteName ? siteName : `${title} — ${siteName}`
+
+const jsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Pablo Noel',
+  url: 'https://www.pablonoel.com',
+  jobTitle: 'Product Designer & Creative Technologist',
+  description: 'Product Designer & Creative Technologist based in Chile, focused on Art, Technology & Society.',
+  knowsAbout: ['Product Design', 'UX Engineering', 'Creative Technology', 'Data Visualization'],
+})
 ---
 <!doctype html>
 <html lang="en">
@@ -25,30 +37,117 @@ const siteName = 'Pablo Noel'
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Primary -->
-    <title>{title + ' — ' + siteName}</title>
+    <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
+    <meta name="robots" content="index, follow" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={siteName} />
-    <meta property="og:title" content={title} />
+    <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={image} />
     <meta property="og:url" content={canonicalURL} />
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
+    <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={image} />
 
+    <!-- Structured data -->
+    <script is:inline type="application/ld+json" set:html={jsonLd} />
+
     <link rel="stylesheet" href="https://use.typekit.net/ynz8mng.css" />
+
+    <!-- Prevent FOC: hide animated elements before first paint -->
+    <style>
+      .site-header, .headline, .rule, .lede, .card { opacity: 0; }
+    </style>
+    <noscript><style>.site-header,.headline,.rule,.lede,.card{opacity:1}</style></noscript>
+
+    <ClientRouter />
   </head>
   <body>
     <div class="page">
       <slot />
+      <Footer />
     </div>
-    <PageAnimations client:load />
+
+    <script>
+      import { gsap } from 'gsap'
+
+      function initAnimations() {
+        gsap.killTweensOf('.site-header, .headline, .rule, .lede, .card')
+
+        const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+        tl.fromTo('.site-header',
+          { y: -12, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.5 }
+        )
+
+        if (document.querySelector('.headline')) {
+          tl.fromTo('.headline',
+              { y: 24, opacity: 0 },
+              { y: 0, opacity: 1, duration: 0.6 },
+              '-=0.2'
+            )
+            .fromTo('.rule',
+              { scaleX: 0, opacity: 0, transformOrigin: 'left' },
+              { scaleX: 1, opacity: 1, duration: 0.5 },
+              '-=0.3'
+            )
+            .fromTo('.lede',
+              { y: 16, opacity: 0 },
+              { y: 0, opacity: 1, duration: 0.5 },
+              '-=0.3'
+            )
+            .fromTo('.card',
+              { opacity: 0 },
+              { opacity: 1, duration: 0.6, stagger: 0.15 },
+              '-=0.2'
+            )
+        }
+      }
+
+      function initTilt() {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+        const elements = document.querySelectorAll<HTMLElement>('.thumb')
+        if (!elements.length) return
+
+        const MAX = 20
+
+        function setTransform(el: HTMLElement, scale: number, xRot: number, yRot: number) {
+          el.style.transform =
+            `perspective(500px) scale(${scale}) rotateX(${xRot}deg) rotateY(${yRot}deg)`
+        }
+
+        elements.forEach((el) => {
+          const reset = () => setTransform(el, 1, 0, 0)
+
+          el.addEventListener('pointermove', (e) => {
+            if (e.pointerType === 'touch') return
+            const { left, top, width, height } = el.getBoundingClientRect()
+            const x = Math.min(Math.max(e.clientY - top, 0), height)
+            const y = Math.min(Math.max(e.clientX - left, 0), width)
+            const yRot = -MAX * ((y - height / 2) / height)
+            const xRot =  MAX * ((x - width  / 2) / width)
+            setTransform(el, 1.1, xRot, yRot)
+          })
+
+          el.addEventListener('pointerleave',  reset)
+          el.addEventListener('pointercancel', reset)
+          el.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'touch') setTransform(el, 0.9, 0, 0) })
+          el.addEventListener('pointerup',   (e) => { if (e.pointerType !== 'touch') setTransform(el, 1.1, 0, 0) })
+        })
+      }
+
+      document.addEventListener('astro:page-load', () => {
+        initAnimations()
+        initTilt()
+      })
+    </script>
   </body>
 </html>
