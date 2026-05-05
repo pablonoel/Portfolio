@@ -23,6 +23,27 @@ body
     pointer-events: none
     opacity: 0.8
 
+// ─── Waves background ────────────────────────────────────────────────────────
+
+a-waves
+  position: absolute
+  inset: 0
+  z-index: 0
+  pointer-events: none
+  overflow: hidden
+
+  svg
+    display: block
+    width: 100%
+    height: 100%
+
+    path
+      fill: none
+      stroke: rgba(255, 255, 255, 0.04)
+      stroke-width: 1px
+      // Keeps stroke at a true 1px in Firefox regardless of SVG viewport scaling
+      vector-effect: non-scaling-stroke
+
 // ─── Header ──────────────────────────────────────────────────────────────────
 
 .site-header
@@ -133,6 +154,7 @@ body
     animation: tw-blink 0.8s step-end infinite
     transform: skew(-5deg) translateX(0.25rem)
     height: var(--headline)
+    will-change: opacity
 
 @keyframes tw-blink
   0%, 100%
@@ -256,6 +278,7 @@ body
       background-repeat: no-repeat
       background-position: center
       transition: transform 0.3s ease-in-out
+      will-change: transform
 
     &:hover
       color: var(--color_ink)

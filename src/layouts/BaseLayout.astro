@@ -59,18 +59,21 @@ const jsonLd = JSON.stringify({
     <!-- Structured data -->
     <script is:inline type="application/ld+json" set:html={jsonLd} />
 
+    <link rel="preconnect" href="https://use.typekit.net" crossorigin />
+    <link rel="preconnect" href="https://p.typekit.net" crossorigin />
     <link rel="stylesheet" href="https://use.typekit.net/ynz8mng.css" />
 
     <!-- Prevent FOC: hide animated elements before first paint -->
     <style>
-      .site-header, .headline, .rule, .lede, .card { opacity: 0; }
+      .site-header, .breadcrumb, .headline, .rule, .lede, .card { opacity: 0; }
     </style>
-    <noscript><style>.site-header,.headline,.rule,.lede,.card{opacity:1}</style></noscript>
+    <noscript><style>.site-header,.breadcrumb,.headline,.rule,.lede,.card{opacity:1}</style></noscript>
 
     <ClientRouter />
   </head>
   <body>
     <div class="page">
+      <a-waves><svg class="js-svg"></svg></a-waves>
       <slot />
       <Footer />
     </div>
@@ -79,12 +82,20 @@ const jsonLd = JSON.stringify({
       import { gsap } from 'gsap'
 
       function initAnimations() {
-        gsap.killTweensOf('.site-header, .headline, .rule, .lede, .card')
+        gsap.killTweensOf('.site-header, .breadcrumb, .headline, .rule, .lede, .card')
+        // Reset inline styles left by a previous tween — without this, Safari and Firefox
+        // start the next page's animation from opacity:1 instead of opacity:0.
+        gsap.set('.site-header, .breadcrumb, .headline, .rule, .lede, .card', { opacity: 0, y: 0, scaleX: 1 })
 
         const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
         tl.fromTo('.site-header',
           { y: -12, opacity: 0 },
           { y: 0, opacity: 1, duration: 0.5 }
+        )
+        .fromTo('.breadcrumb',
+          { y: -6, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.3 },
+          '-=0.2'
         )
 
         if (document.querySelector('.headline')) {
@@ -108,6 +119,16 @@ const jsonLd = JSON.stringify({
               { opacity: 1, duration: 0.6, stagger: 0.15 },
               '-=0.2'
             )
+            .fromTo('.box',
+              { opacity: 0 },
+              { opacity: 1, duration: 0.6, stagger: 0.15 },
+              '-=0.2'
+            )
+            .fromTo('.media',
+              { opacity: 0 },
+              { opacity: 1, duration: 0.6, stagger: 0.15 },
+              '-=0.2'
+            )
         }
       }
 
@@ -118,18 +139,27 @@ const jsonLd = JSON.stringify({
         if (!elements.length) return
 
         const MAX = 20
+        const rects = new WeakMap<HTMLElement, DOMRect>()
 
         function setTransform(el: HTMLElement, scale: number, xRot: number, yRot: number) {
           el.style.transform =
             `perspective(500px) scale(${scale}) rotateX(${xRot}deg) rotateY(${yRot}deg)`
         }
 
+        // Cache bounding rects so pointermove never triggers a layout read
+        const ro = new ResizeObserver(() => {
+          elements.forEach(el => rects.set(el, el.getBoundingClientRect()))
+        })
+
         elements.forEach((el) => {
+          rects.set(el, el.getBoundingClientRect())
+          ro.observe(el)
+
           const reset = () => setTransform(el, 1, 0, 0)
 
           el.addEventListener('pointermove', (e) => {
             if (e.pointerType === 'touch') return
-            const { left, top, width, height } = el.getBoundingClientRect()
+            const { left, top, width, height } = rects.get(el)!
             const x = Math.min(Math.max(e.clientY - top, 0), height)
             const y = Math.min(Math.max(e.clientX - left, 0), width)
             const yRot = -MAX * ((y - height / 2) / height)
@@ -148,6 +178,322 @@ const jsonLd = JSON.stringify({
         initAnimations()
         initTilt()
       })
+    </script>
+
+    <script>
+      // ─── Config ────────────────────────────────────────────────────────────────
+      // All tunable knobs in one place. Tweak these to change the visual feel.
+
+      const WAVES = {
+        // Grid: horizontal gap between lines (px), vertical gap between points (px)
+        // Smaller xGap = denser lines; smaller yGap = more points per line (smoother curves)
+        lineGapX: 10,
+        lineGapY: 32,
+
+        // Wave shape: how far each point drifts horizontally and vertically (px)
+        // waveX drives the left-right sway; waveY drives the up-down sway
+        waveX: 32,
+        waveY: 16,
+
+        // Wave speed: how fast the Perlin field scrolls along X and Y over time
+        // Higher = faster drift
+        speedX: 0.005,
+        speedY: 0.001,
+
+        // Wave turbulence: scales the Perlin sample coordinates
+        // Higher = noisier, more chaotic shapes
+        noiseScaleX: 0.002,
+        noiseScaleY: 0.0015,
+
+        // Overall noise amplitude multiplier applied before cos/sin
+        noiseAmp: 12,
+      }
+
+      const CURSOR = {
+        // Minimum influence radius (px). Grows with cursor speed.
+        radius: 360,
+
+        // Spring tension pulling displaced points back to rest (0–1, higher = snappier)
+        tension: 0.005,
+
+        // Velocity damping each frame (0–1, lower = more friction / faster decay)
+        friction: 0.5,
+
+        // How strongly the cursor velocity pushes points
+        strength: 0.00065,
+
+        // Multiplier applied to the velocity when moving points (amplifies displacement)
+        velocityMult: 2,
+
+        // Maximum displacement clamp (px) — prevents points from flying off-screen
+        maxDisplace: 100,
+
+        // Mouse smoothing factor (0–1, lower = more lag / smoother follow)
+        smoothing: 0.1,
+      }
+
+      // ─── Perlin noise ──────────────────────────────────────────────────────────
+      // Classic Improved Perlin Noise by Ken Perlin (public domain via noisejs).
+      // Seeded at init so each page load has a unique starting wave pattern.
+
+      class Noise {
+        constructor(seed) {
+          // 12 gradient vectors on a unit cube — used to calculate directional noise
+          const grad3 = [
+            [1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],
+            [1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],
+            [0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]
+          ].map(([x,y,z]) => ({ x, y, z, dot2(ax:number,ay:number){return x*ax+y*ay} }))
+
+          // Permutation table — deterministic pseudo-random lookup used by Perlin
+          const p = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180]
+
+          this.perm = new Array(512)
+          this.gradP = new Array(512)
+
+          // Mix the seed into the permutation table so each seed gives a unique field
+          let s = seed > 0 && seed < 1 ? Math.floor(seed * 65536) : Math.floor(seed)
+          if (s < 256) s |= s << 8
+          for (let i = 0; i < 256; i++) {
+            const v = (i & 1) ? p[i] ^ (s & 255) : p[i] ^ ((s >> 8) & 255)
+            this.perm[i] = this.perm[i + 256] = v
+            this.gradP[i] = this.gradP[i + 256] = grad3[v % 12]
+          }
+        }
+
+        // Returns a noise value in roughly [-1, 1] for a 2D coordinate
+        perlin2(x: number, y: number) {
+          let X = Math.floor(x), Y = Math.floor(y)
+          x -= X; y -= Y
+          X &= 255; Y &= 255
+          const fade = (t: number) => t*t*t*(t*(t*6-15)+10)  // smoothstep curve
+          const lerp = (a: number, b: number, t: number) => (1-t)*a + t*b
+          const n00 = this.gradP[X+this.perm[Y]].dot2(x, y)
+          const n01 = this.gradP[X+this.perm[Y+1]].dot2(x, y-1)
+          const n10 = this.gradP[X+1+this.perm[Y]].dot2(x-1, y)
+          const n11 = this.gradP[X+1+this.perm[Y+1]].dot2(x-1, y-1)
+          const u = fade(x)
+          return lerp(lerp(n00, n10, u), lerp(n01, n11, u), fade(y))
+        }
+      }
+
+      // ─── Custom element ────────────────────────────────────────────────────────
+      // <a-waves> renders a full-bleed SVG grid of vertical lines that drift with
+      // Perlin noise and react to mouse / touch movement.
+
+      class AWaves extends HTMLElement {
+        svg!: SVGElement
+        mouse = { x: -10, y: 0, lx: 0, ly: 0, sx: 0, sy: 0, v: 0, vs: 0, a: 0, set: false }
+        lines: any[][] = []
+        paths: SVGPathElement[] = []
+        noise!: Noise
+        bounding!: DOMRect
+        _raf: number | null = null
+        _onResize!: () => void
+        _onMouseMove!: (e: MouseEvent) => void
+        _onTouchMove!: (e: TouchEvent) => void
+
+        connectedCallback() {
+          this.svg = this.querySelector('.js-svg') as SVGElement
+          this.mouse = { x: -10, y: 0, lx: 0, ly: 0, sx: 0, sy: 0, v: 0, vs: 0, a: 0, set: false }
+          this.lines = []
+          this.paths = []
+          this.noise = new Noise(Math.random())
+
+          // Defer layout reads to after the first paint so getBoundingClientRect()
+          // returns real dimensions instead of zero (happens on Astro page transitions
+          // and in Safari/Firefox where connectedCallback fires before layout).
+          requestAnimationFrame(() => {
+            this.setSize()
+            this.setLines()
+            this.bindEvents()
+            this._raf = requestAnimationFrame(this.tick.bind(this))
+          })
+        }
+
+        // Cancel the animation loop and remove all global listeners on unmount
+        disconnectedCallback() {
+          if (this._raf) cancelAnimationFrame(this._raf)
+          window.removeEventListener('resize', this._onResize)
+          window.removeEventListener('mousemove', this._onMouseMove)
+          window.removeEventListener('touchmove', this._onTouchMove)
+        }
+
+        bindEvents() {
+          this._onResize = this.onResize.bind(this)
+          this._onMouseMove = this.onMouseMove.bind(this)
+          this._onTouchMove = (e: TouchEvent) => {
+            e.preventDefault()
+            const touch = e.touches[0]
+            this.updateMousePosition(touch.pageX, touch.pageY)
+          }
+          window.addEventListener('resize', this._onResize)
+          window.addEventListener('mousemove', this._onMouseMove)
+          // Only bind touch interaction on hover-capable (non-touch-primary) devices.
+          // On mobile, touchmove with preventDefault() would block page scroll.
+          if (!window.matchMedia('(hover: none)').matches) {
+            window.addEventListener('touchmove', this._onTouchMove, { passive: false })
+          }
+        }
+
+        onResize() {
+          this.setSize()
+          this.setLines()
+        }
+
+        onMouseMove(e: MouseEvent) {
+          this.updateMousePosition(e.pageX, e.pageY)
+        }
+
+        // Translate page coordinates into element-local coordinates
+        updateMousePosition(x: number, y: number) {
+          const { mouse } = this
+          mouse.x = x - this.bounding.left
+          mouse.y = y - this.bounding.top + window.scrollY
+          if (!mouse.set) {
+            mouse.sx = mouse.x; mouse.sy = mouse.y
+            mouse.lx = mouse.x; mouse.ly = mouse.y
+            mouse.set = true
+          }
+        }
+
+        // Sync the SVG canvas size to the element's bounding box
+        setSize() {
+          this.bounding = this.getBoundingClientRect()
+          ;(this.svg as HTMLElement).style.width = `${this.bounding.width}px`
+          ;(this.svg as HTMLElement).style.height = `${this.bounding.height}px`
+        }
+
+        // Build the point grid and create one SVG <path> per vertical line
+        setLines() {
+          const { width, height } = this.bounding
+          this.lines = []
+          this.paths.forEach(p => p.remove())
+          this.paths = []
+
+          // Extend the grid beyond the viewport edges so lines don't visibly start/end
+          const oWidth = width + 200, oHeight = height + 30
+          const totalLines = Math.ceil(oWidth / WAVES.lineGapX)
+          const totalPoints = Math.ceil(oHeight / WAVES.lineGapY)
+
+          // Center the grid so the overflow is balanced on both sides
+          const xStart = (width - WAVES.lineGapX * totalLines) / 2
+          const yStart = (height - WAVES.lineGapY * totalPoints) / 2
+
+          for (let i = 0; i <= totalLines; i++) {
+            const points = []
+            for (let j = 0; j <= totalPoints; j++) {
+              points.push({
+                x: xStart + WAVES.lineGapX * i,
+                y: yStart + WAVES.lineGapY * j,
+                wave: { x: 0, y: 0 },       // Perlin-driven displacement
+                cursor: { x: 0, y: 0, vx: 0, vy: 0 }, // Physics-driven displacement
+              })
+            }
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+            path.classList.add('js-line')
+            this.svg.appendChild(path)
+            this.paths.push(path)
+            this.lines.push(points)
+          }
+        }
+
+        // Apply Perlin wave drift and cursor spring physics to every grid point
+        movePoints(time: number) {
+          const { lines, mouse, noise } = this
+          lines.forEach(points => {
+            points.forEach(p => {
+              // Sample Perlin field — result drives a cos/sin orbit for the point
+              const move = noise.perlin2(
+                (p.x + time * WAVES.speedX) * WAVES.noiseScaleX,
+                (p.y + time * WAVES.speedY) * WAVES.noiseScaleY
+              ) * WAVES.noiseAmp
+              p.wave.x = Math.cos(move) * WAVES.waveX
+              p.wave.y = Math.sin(move) * WAVES.waveY
+
+              // Cursor repulsion: scale force by proximity and cursor velocity
+              const dx = p.x - mouse.sx, dy = p.y - mouse.sy
+              const d = Math.hypot(dx, dy)
+              const l = Math.max(CURSOR.radius, mouse.vs)  // radius grows with speed
+              if (d < l) {
+                const s = 1 - d / l                        // 1 at center, 0 at edge
+                const f = Math.cos(d * 0.001) * s
+                p.cursor.vx += Math.cos(mouse.a) * f * l * mouse.vs * CURSOR.strength
+                p.cursor.vy += Math.sin(mouse.a) * f * l * mouse.vs * CURSOR.strength
+              }
+
+              // Spring: pull displaced point back toward its rest position
+              p.cursor.vx += (0 - p.cursor.x) * CURSOR.tension
+              p.cursor.vy += (0 - p.cursor.y) * CURSOR.tension
+
+              // Friction: bleed off velocity each frame
+              p.cursor.vx *= CURSOR.friction
+              p.cursor.vy *= CURSOR.friction
+
+              // Integrate velocity into position
+              p.cursor.x += p.cursor.vx * CURSOR.velocityMult
+              p.cursor.y += p.cursor.vy * CURSOR.velocityMult
+
+              // Clamp to prevent runaway displacement
+              p.cursor.x = Math.min(CURSOR.maxDisplace, Math.max(-CURSOR.maxDisplace, p.cursor.x))
+              p.cursor.y = Math.min(CURSOR.maxDisplace, Math.max(-CURSOR.maxDisplace, p.cursor.y))
+            })
+          })
+        }
+
+        // Return the final screen coordinates of a point (wave + optional cursor offset)
+        moved(point: any, withCursorForce = true) {
+          return {
+            x: Math.round((point.x + point.wave.x + (withCursorForce ? point.cursor.x : 0)) * 10) / 10,
+            y: Math.round((point.y + point.wave.y + (withCursorForce ? point.cursor.y : 0)) * 10) / 10,
+          }
+        }
+
+        // Write the SVG path `d` attribute for each line from its moved points
+        drawLines() {
+          const { lines, paths } = this
+          lines.forEach((points, lIndex) => {
+            // First point: move-to without cursor force (anchors the path start cleanly)
+            let d = `M ${this.moved(points[0], false).x} ${this.moved(points[0], false).y}`
+            points.forEach((p1, pIndex) => {
+              const isLast = pIndex === points.length - 1
+              const mp1 = this.moved(p1, !isLast)  // last point also excludes cursor force
+              d += ` L ${mp1.x} ${mp1.y}`
+            })
+            paths[lIndex].setAttribute('d', d)
+          })
+        }
+
+        // Main animation loop — runs every frame via requestAnimationFrame
+        tick(time: number) {
+          const { mouse } = this
+
+          // Smooth the raw mouse position (exponential moving average)
+          mouse.sx += (mouse.x - mouse.sx) * CURSOR.smoothing
+          mouse.sy += (mouse.y - mouse.sy) * CURSOR.smoothing
+
+          // Compute cursor velocity (distance moved since last frame)
+          const dx = mouse.x - mouse.lx, dy = mouse.y - mouse.ly
+          const d = Math.hypot(dx, dy)
+          mouse.v = d
+          mouse.vs += (d - mouse.vs) * CURSOR.smoothing  // smooth velocity too
+          mouse.vs = Math.min(100, mouse.vs)
+          mouse.lx = mouse.x; mouse.ly = mouse.y
+          mouse.a = Math.atan2(dy, dx)  // cursor direction angle
+
+          // Expose smoothed cursor position as CSS vars (used by the ::before dot)
+          this.style.setProperty('--x', `${mouse.sx}px`)
+          this.style.setProperty('--y', `${mouse.sy}px`)
+
+          this.movePoints(time)
+          this.drawLines()
+          this._raf = requestAnimationFrame(this.tick.bind(this))
+        }
+      }
+
+      if (!customElements.get('a-waves')) {
+        customElements.define('a-waves', AWaves)
+      }
     </script>
   </body>
 </html>
