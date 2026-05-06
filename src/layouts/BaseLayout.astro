@@ -87,6 +87,17 @@ const jsonLd = JSON.stringify({
       <Footer />
     </div>
 
+    <div id="img-modal" role="dialog" aria-modal="true" aria-label="Image viewer" tabindex="-1">
+      <div class="modal-backdrop"></div>
+      <button class="modal-close" aria-label="Close">&#x2715;</button>
+      <button class="modal-prev" aria-label="Previous image">&#x2190;</button>
+      <button class="modal-next" aria-label="Next image">&#x2192;</button>
+      <div class="modal-frame">
+        <img class="modal-img" src="" alt="" draggable="false" />
+      </div>
+      <p class="modal-caption"></p>
+    </div>
+
     <script>
       import { gsap } from 'gsap'
 
@@ -493,6 +504,173 @@ const jsonLd = JSON.stringify({
       if (!customElements.get('a-waves')) {
         customElements.define('a-waves', AWaves)
       }
+    </script>
+
+    <script>
+      // Image lightbox — document-level delegation survives Astro page transitions
+      (() => {
+        let zoom = 1
+        let panX = 0, panY = 0
+        let dragging = false
+        let startX = 0, startY = 0, startPanX = 0, startPanY = 0
+        let images: { src: string; alt: string; caption: string }[] = []
+        let currentIndex = 0
+
+        const m  = () => document.getElementById('img-modal')
+        const mi = () => m()?.querySelector<HTMLImageElement>('.modal-img') ?? null
+
+        function applyTransform(animated = false) {
+          const img = mi(); if (!img) return
+          img.style.transition = animated ? 'transform 0.2s ease' : 'none'
+          img.style.transform  = `scale(${zoom}) translate(${panX / zoom}px, ${panY / zoom}px)`
+          img.style.cursor     = zoom > 1 ? (dragging ? 'grabbing' : 'grab') : 'zoom-in'
+        }
+
+        function setCaption(text: string) {
+          const cap = m()?.querySelector<HTMLElement>('.modal-caption'); if (!cap) return
+          cap.textContent = text
+          cap.style.display = text ? '' : 'none'
+        }
+
+        function updateArrows() {
+          const el = m(); if (!el) return
+          const prev = el.querySelector<HTMLButtonElement>('.modal-prev')!
+          const next = el.querySelector<HTMLButtonElement>('.modal-next')!
+          const single = images.length <= 1
+          prev.style.visibility = single ? 'hidden' : ''
+          next.style.visibility = single ? 'hidden' : ''
+          prev.disabled = currentIndex === 0
+          next.disabled = currentIndex === images.length - 1
+        }
+
+        function loadImage(index: number, animate: boolean) {
+          const { src, alt, caption } = images[index]
+          const img = mi(); if (!img) return
+          if (animate) {
+            img.style.transition = 'opacity 0.15s ease'
+            img.style.opacity = '0'
+            setTimeout(() => {
+              zoom = 1; panX = 0; panY = 0
+              img.src = src; img.alt = alt
+              img.style.transform = 'scale(1) translate(0px, 0px)'
+              img.style.cursor = 'zoom-in'
+              img.style.opacity = '1'
+              setCaption(caption)
+              updateArrows()
+            }, 150)
+          } else {
+            zoom = 1; panX = 0; panY = 0
+            img.src = src; img.alt = alt
+            applyTransform(false)
+            setCaption(caption)
+            updateArrows()
+          }
+        }
+
+        function navigateTo(index: number) {
+          if (index < 0 || index >= images.length) return
+          currentIndex = index
+          loadImage(index, true)
+        }
+
+        function openModal(clickedImg: HTMLImageElement) {
+          const el = m(); if (!el) return
+          const all = Array.from(document.querySelectorAll<HTMLImageElement>('figure.media.image img'))
+            .filter(img => !img.closest('#img-modal'))
+          images = all.map(img => ({
+            src: img.src,
+            alt: img.alt,
+            caption: img.closest('figure')?.querySelector('figcaption')?.textContent ?? '',
+          }))
+          currentIndex = all.indexOf(clickedImg)
+          loadImage(currentIndex, false)
+          el.classList.add('open')
+          document.body.style.overflow = 'hidden'
+          el.focus()
+        }
+
+        function closeModal() {
+          const el = m(); if (!el) return
+          el.classList.remove('open')
+          document.body.style.overflow = ''
+          setTimeout(() => { const img = mi(); if (img) { img.src = ''; img.style.opacity = '' } }, 250)
+        }
+
+        // Click delegation — open, navigate, zoom toggle, close
+        document.addEventListener('click', (e) => {
+          const t = e.target as Element
+
+          // Open: article image clicked
+          if (t.tagName === 'IMG' && t.closest('figure.media.image') && !t.closest('#img-modal')) {
+            openModal(t as HTMLImageElement)
+            return
+          }
+
+          const el = m()
+          if (!el?.classList.contains('open')) return
+
+          // Arrow navigation
+          if (t.closest('.modal-prev')) { navigateTo(currentIndex - 1); return }
+          if (t.closest('.modal-next')) { navigateTo(currentIndex + 1); return }
+
+          // Toggle zoom on modal image click
+          if (t === mi() || t.closest('#img-modal .modal-frame img')) {
+            zoom = zoom > 1 ? 1 : 2
+            if (zoom === 1) { panX = 0; panY = 0 }
+            applyTransform(true)
+            return
+          }
+
+          // Close: backdrop or close button
+          if (t.closest('.modal-close') || t.classList.contains('modal-backdrop')) {
+            closeModal()
+          }
+        })
+
+        // Keyboard: escape, left/right arrows
+        document.addEventListener('keydown', (e) => {
+          if (!m()?.classList.contains('open')) return
+          if (e.key === 'Escape')     { closeModal(); return }
+          if (e.key === 'ArrowLeft')  { navigateTo(currentIndex - 1); return }
+          if (e.key === 'ArrowRight') { navigateTo(currentIndex + 1); return }
+        })
+
+        // Scroll wheel to zoom
+        document.addEventListener('wheel', (e) => {
+          if (!m()?.classList.contains('open')) return
+          e.preventDefault()
+          zoom = Math.min(4, Math.max(1, zoom * (e.deltaY > 0 ? 0.9 : 1.1)))
+          if (zoom === 1) { panX = 0; panY = 0 }
+          applyTransform(false)
+        }, { passive: false })
+
+        // Drag to pan when zoomed
+        document.addEventListener('pointerdown', (e) => {
+          const img = mi()
+          if (!img || !img.contains(e.target as Node)) return
+          if (!m()?.classList.contains('open') || zoom <= 1) return
+          dragging = true
+          startX = e.clientX; startY = e.clientY
+          startPanX = panX; startPanY = panY
+          img.setPointerCapture(e.pointerId)
+          applyTransform(false)
+        })
+
+        document.addEventListener('pointermove', (e) => {
+          if (!dragging) return
+          panX = startPanX + (e.clientX - startX)
+          panY = startPanY + (e.clientY - startY)
+          const img = mi(); if (!img) return
+          img.style.transition = 'none'
+          img.style.transform  = `scale(${zoom}) translate(${panX / zoom}px, ${panY / zoom}px)`
+        })
+
+        document.addEventListener('pointerup', () => {
+          if (!dragging) return
+          dragging = false
+          applyTransform(false)
+        })
+      })()
     </script>
   </body>
 </html>
