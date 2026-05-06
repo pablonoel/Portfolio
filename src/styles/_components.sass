@@ -284,10 +284,12 @@
   opacity: 0
   pointer-events: none
   transition: opacity 0.25s ease
+  // Prevent the Android Chrome "swipe back" gesture from firing inside the modal
+  overscroll-behavior: none
 
   &.open
     opacity: 1
-    pointer-events: all
+    pointer-events: auto
 
   .modal-backdrop
     position: absolute
@@ -345,6 +347,9 @@
     align-items: center
     justify-content: center
     overflow: hidden
+    // Prevents Chrome from claiming the touch gesture for native scroll/pinch
+    // while the user is panning a zoomed image
+    touch-action: none
 
   .modal-img
     display: block

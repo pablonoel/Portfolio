@@ -74,9 +74,9 @@ const jsonLd = JSON.stringify({
 
     <!-- Prevent FOC: hide animated elements before first paint -->
     <style>
-      .site-header, .breadcrumb, .headline, .rule, .lede, .card, .box { opacity: 0; }
+      .site-header, .breadcrumb, .headline, .rule, .lede, .card, .box, .media { opacity: 0; }
     </style>
-    <noscript><style>.site-header,.breadcrumb,.headline,.rule,.lede,.card,.box{opacity:1}</style></noscript>
+    <noscript><style>.site-header,.breadcrumb,.headline,.rule,.lede,.card,.box,.media{opacity:1}</style></noscript>
 
     <ClientRouter />
   </head>
@@ -93,7 +93,7 @@ const jsonLd = JSON.stringify({
       <button class="modal-prev" aria-label="Previous image">&#x2190;</button>
       <button class="modal-next" aria-label="Next image">&#x2192;</button>
       <div class="modal-frame">
-        <img class="modal-img" src="" alt="" draggable="false" />
+        <img class="modal-img" alt="" draggable="false" />
       </div>
       <p class="modal-caption"></p>
     </div>
@@ -102,10 +102,10 @@ const jsonLd = JSON.stringify({
       import { gsap } from 'gsap'
 
       function initAnimations() {
-        gsap.killTweensOf('.site-header, .breadcrumb, .headline, .rule, .lede, .card, .box')
+        gsap.killTweensOf('.site-header, .breadcrumb, .headline, .rule, .lede, .card, .box, .media')
         // Reset inline styles left by a previous tween — without this, Safari and Firefox
         // start the next page's animation from opacity:1 instead of opacity:0.
-        gsap.set('.site-header, .breadcrumb, .headline, .rule, .lede, .card, .box', { opacity: 0, y: 0, scaleX: 1 })
+        gsap.set('.site-header, .breadcrumb, .headline, .rule, .lede, .card, .box, .media', { opacity: 0, y: 0, scaleX: 1 })
 
         const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
         tl.fromTo('.site-header',
@@ -512,9 +512,11 @@ const jsonLd = JSON.stringify({
         let zoom = 1
         let panX = 0, panY = 0
         let dragging = false
+        let wasDragging = false   // suppresses the click that fires after a drag release
         let startX = 0, startY = 0, startPanX = 0, startPanY = 0
         let images: { src: string; alt: string; caption: string }[] = []
         let currentIndex = 0
+        let loadTimer: ReturnType<typeof setTimeout> | null = null
 
         const m  = () => document.getElementById('img-modal')
         const mi = () => m()?.querySelector<HTMLImageElement>('.modal-img') ?? null
@@ -547,9 +549,12 @@ const jsonLd = JSON.stringify({
           const { src, alt, caption } = images[index]
           const img = mi(); if (!img) return
           if (animate) {
+            // Cancel any in-flight swap to prevent stale timeouts overwriting the new one
+            if (loadTimer) { clearTimeout(loadTimer); loadTimer = null }
             img.style.transition = 'opacity 0.15s ease'
             img.style.opacity = '0'
-            setTimeout(() => {
+            loadTimer = setTimeout(() => {
+              loadTimer = null
               zoom = 1; panX = 0; panY = 0
               img.src = src; img.alt = alt
               img.style.transform = 'scale(1) translate(0px, 0px)'
@@ -573,6 +578,13 @@ const jsonLd = JSON.stringify({
           loadImage(index, true)
         }
 
+        function onWheel(e: WheelEvent) {
+          e.preventDefault()
+          zoom = Math.min(4, Math.max(1, zoom * (e.deltaY > 0 ? 0.9 : 1.1)))
+          if (zoom === 1) { panX = 0; panY = 0 }
+          applyTransform(false)
+        }
+
         function openModal(clickedImg: HTMLImageElement) {
           const el = m(); if (!el) return
           const all = Array.from(document.querySelectorAll<HTMLImageElement>('figure.media.image img'))
@@ -586,14 +598,25 @@ const jsonLd = JSON.stringify({
           loadImage(currentIndex, false)
           el.classList.add('open')
           document.body.style.overflow = 'hidden'
+          // Add wheel listener only while open — a permanent passive:false listener on
+          // document forces Chrome to wait for JS before every scroll event, causing jank
+          document.addEventListener('wheel', onWheel, { passive: false })
           el.focus()
+        }
+
+        function stopDrag() {
+          dragging = false
+          applyTransform(false)
         }
 
         function closeModal() {
           const el = m(); if (!el) return
+          if (loadTimer) { clearTimeout(loadTimer); loadTimer = null }
           el.classList.remove('open')
           document.body.style.overflow = ''
-          setTimeout(() => { const img = mi(); if (img) { img.src = ''; img.style.opacity = '' } }, 250)
+          document.removeEventListener('wheel', onWheel)
+          // removeAttribute avoids the empty-src network request Firefox fires for src=""
+          setTimeout(() => { const img = mi(); if (img) { img.removeAttribute('src'); img.style.opacity = '' } }, 250)
         }
 
         // Click delegation — open, navigate, zoom toggle, close
@@ -613,8 +636,9 @@ const jsonLd = JSON.stringify({
           if (t.closest('.modal-prev')) { navigateTo(currentIndex - 1); return }
           if (t.closest('.modal-next')) { navigateTo(currentIndex + 1); return }
 
-          // Toggle zoom on modal image click
+          // Toggle zoom — skip if the click was the tail of a drag gesture
           if (t === mi() || t.closest('#img-modal .modal-frame img')) {
+            if (wasDragging) { wasDragging = false; return }
             zoom = zoom > 1 ? 1 : 2
             if (zoom === 1) { panX = 0; panY = 0 }
             applyTransform(true)
@@ -635,21 +659,13 @@ const jsonLd = JSON.stringify({
           if (e.key === 'ArrowRight') { navigateTo(currentIndex + 1); return }
         })
 
-        // Scroll wheel to zoom
-        document.addEventListener('wheel', (e) => {
-          if (!m()?.classList.contains('open')) return
-          e.preventDefault()
-          zoom = Math.min(4, Math.max(1, zoom * (e.deltaY > 0 ? 0.9 : 1.1)))
-          if (zoom === 1) { panX = 0; panY = 0 }
-          applyTransform(false)
-        }, { passive: false })
-
         // Drag to pan when zoomed
         document.addEventListener('pointerdown', (e) => {
           const img = mi()
           if (!img || !img.contains(e.target as Node)) return
           if (!m()?.classList.contains('open') || zoom <= 1) return
           dragging = true
+          wasDragging = false
           startX = e.clientX; startY = e.clientY
           startPanX = panX; startPanY = panY
           img.setPointerCapture(e.pointerId)
@@ -658,18 +674,19 @@ const jsonLd = JSON.stringify({
 
         document.addEventListener('pointermove', (e) => {
           if (!dragging) return
-          panX = startPanX + (e.clientX - startX)
-          panY = startPanY + (e.clientY - startY)
+          const dx = e.clientX - startX, dy = e.clientY - startY
+          // Only flag as a real drag after moving more than 4px (avoids suppressing taps)
+          if (!wasDragging && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) wasDragging = true
+          panX = startPanX + dx
+          panY = startPanY + dy
           const img = mi(); if (!img) return
           img.style.transition = 'none'
           img.style.transform  = `scale(${zoom}) translate(${panX / zoom}px, ${panY / zoom}px)`
         })
 
-        document.addEventListener('pointerup', () => {
-          if (!dragging) return
-          dragging = false
-          applyTransform(false)
-        })
+        document.addEventListener('pointerup', () => { if (dragging) stopDrag() })
+        // pointercancel fires when the browser takes over the pointer (e.g. scroll on mobile)
+        document.addEventListener('pointercancel', () => { if (dragging) { wasDragging = false; stopDrag() } })
       })()
     </script>
   </body>
