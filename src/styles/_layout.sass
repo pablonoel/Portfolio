@@ -31,6 +31,8 @@ a-waves
   z-index: 0
   pointer-events: none
   overflow: hidden
+  // Isolates per-frame SVG repaints from the rest of the document
+  contain: paint
 
   svg
     display: block

@@ -13,7 +13,7 @@ interface Props {
 const {
   title,
   description = 'Pablo Noel — Product Designer & Creative Technologist.',
-  image = '/assets/og-default.png',
+  image = '/assets/og-image.png',
   canonicalURL = Astro.url.href,
 } = Astro.props
 
@@ -35,6 +35,15 @@ const jsonLd = JSON.stringify({
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/assets/favicon/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon/android-chrome-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/assets/favicon/android-chrome-512x512.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <!-- Primary -->
     <title>{pageTitle}</title>
@@ -65,9 +74,9 @@ const jsonLd = JSON.stringify({
 
     <!-- Prevent FOC: hide animated elements before first paint -->
     <style>
-      .site-header, .breadcrumb, .headline, .rule, .lede, .card { opacity: 0; }
+      .site-header, .breadcrumb, .headline, .rule, .lede, .card, .box { opacity: 0; }
     </style>
-    <noscript><style>.site-header,.breadcrumb,.headline,.rule,.lede,.card{opacity:1}</style></noscript>
+    <noscript><style>.site-header,.breadcrumb,.headline,.rule,.lede,.card,.box{opacity:1}</style></noscript>
 
     <ClientRouter />
   </head>
@@ -82,10 +91,10 @@ const jsonLd = JSON.stringify({
       import { gsap } from 'gsap'
 
       function initAnimations() {
-        gsap.killTweensOf('.site-header, .breadcrumb, .headline, .rule, .lede, .card')
+        gsap.killTweensOf('.site-header, .breadcrumb, .headline, .rule, .lede, .card, .box')
         // Reset inline styles left by a previous tween — without this, Safari and Firefox
         // start the next page's animation from opacity:1 instead of opacity:0.
-        gsap.set('.site-header, .breadcrumb, .headline, .rule, .lede, .card', { opacity: 0, y: 0, scaleX: 1 })
+        gsap.set('.site-header, .breadcrumb, .headline, .rule, .lede, .card, .box', { opacity: 0, y: 0, scaleX: 1 })
 
         const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
         tl.fromTo('.site-header',
@@ -132,51 +141,8 @@ const jsonLd = JSON.stringify({
         }
       }
 
-      function initTilt() {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-
-        const elements = document.querySelectorAll<HTMLElement>('.thumb')
-        if (!elements.length) return
-
-        const MAX = 20
-        const rects = new WeakMap<HTMLElement, DOMRect>()
-
-        function setTransform(el: HTMLElement, scale: number, xRot: number, yRot: number) {
-          el.style.transform =
-            `perspective(500px) scale(${scale}) rotateX(${xRot}deg) rotateY(${yRot}deg)`
-        }
-
-        // Cache bounding rects so pointermove never triggers a layout read
-        const ro = new ResizeObserver(() => {
-          elements.forEach(el => rects.set(el, el.getBoundingClientRect()))
-        })
-
-        elements.forEach((el) => {
-          rects.set(el, el.getBoundingClientRect())
-          ro.observe(el)
-
-          const reset = () => setTransform(el, 1, 0, 0)
-
-          el.addEventListener('pointermove', (e) => {
-            if (e.pointerType === 'touch') return
-            const { left, top, width, height } = rects.get(el)!
-            const x = Math.min(Math.max(e.clientY - top, 0), height)
-            const y = Math.min(Math.max(e.clientX - left, 0), width)
-            const yRot = -MAX * ((y - height / 2) / height)
-            const xRot =  MAX * ((x - width  / 2) / width)
-            setTransform(el, 1.1, xRot, yRot)
-          })
-
-          el.addEventListener('pointerleave',  reset)
-          el.addEventListener('pointercancel', reset)
-          el.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'touch') setTransform(el, 0.9, 0, 0) })
-          el.addEventListener('pointerup',   (e) => { if (e.pointerType !== 'touch') setTransform(el, 1.1, 0, 0) })
-        })
-      }
-
       document.addEventListener('astro:page-load', () => {
         initAnimations()
-        initTilt()
       })
     </script>
 
@@ -237,7 +203,10 @@ const jsonLd = JSON.stringify({
       // Seeded at init so each page load has a unique starting wave pattern.
 
       class Noise {
-        constructor(seed) {
+        perm: number[] = []
+        gradP: { x: number; y: number; z: number; dot2(ax: number, ay: number): number }[] = []
+
+        constructor(seed: number) {
           // 12 gradient vectors on a unit cube — used to calculate directional noise
           const grad3 = [
             [1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],
@@ -289,9 +258,13 @@ const jsonLd = JSON.stringify({
         noise!: Noise
         bounding!: DOMRect
         _raf: number | null = null
+        _resizeTimer: ReturnType<typeof setTimeout> | null = null
+        _lastSx = 0; _lastSy = 0
+        _boundTick!: FrameRequestCallback
         _onResize!: () => void
         _onMouseMove!: (e: MouseEvent) => void
         _onTouchMove!: (e: TouchEvent) => void
+        _onVisibility!: () => void
 
         connectedCallback() {
           this.svg = this.querySelector('.js-svg') as SVGElement
@@ -299,6 +272,8 @@ const jsonLd = JSON.stringify({
           this.lines = []
           this.paths = []
           this.noise = new Noise(Math.random())
+          // Bind once — reused every frame to avoid per-frame closure allocation
+          this._boundTick = this.tick.bind(this)
 
           // Defer layout reads to after the first paint so getBoundingClientRect()
           // returns real dimensions instead of zero (happens on Astro page transitions
@@ -307,25 +282,42 @@ const jsonLd = JSON.stringify({
             this.setSize()
             this.setLines()
             this.bindEvents()
-            this._raf = requestAnimationFrame(this.tick.bind(this))
+            this._raf = requestAnimationFrame(this._boundTick)
           })
         }
 
         // Cancel the animation loop and remove all global listeners on unmount
         disconnectedCallback() {
           if (this._raf) cancelAnimationFrame(this._raf)
+          if (this._resizeTimer) clearTimeout(this._resizeTimer)
           window.removeEventListener('resize', this._onResize)
           window.removeEventListener('mousemove', this._onMouseMove)
           window.removeEventListener('touchmove', this._onTouchMove)
+          document.removeEventListener('visibilitychange', this._onVisibility)
         }
 
         bindEvents() {
-          this._onResize = this.onResize.bind(this)
-          this._onMouseMove = this.onMouseMove.bind(this)
+          this._onResize = () => {
+            if (this._resizeTimer) clearTimeout(this._resizeTimer)
+            this._resizeTimer = setTimeout(() => {
+              this.setSize()
+              this.setLines()
+              this._resizeTimer = null
+            }, 150)
+          }
+          this._onMouseMove = (e: MouseEvent) => this.updateMousePosition(e.pageX, e.pageY)
           this._onTouchMove = (e: TouchEvent) => {
             e.preventDefault()
             const touch = e.touches[0]
             this.updateMousePosition(touch.pageX, touch.pageY)
+          }
+          // Pause the rAF loop when the tab is hidden, resume when visible
+          this._onVisibility = () => {
+            if (document.hidden) {
+              if (this._raf) { cancelAnimationFrame(this._raf); this._raf = null }
+            } else if (!this._raf) {
+              this._raf = requestAnimationFrame(this._boundTick)
+            }
           }
           window.addEventListener('resize', this._onResize)
           window.addEventListener('mousemove', this._onMouseMove)
@@ -334,15 +326,7 @@ const jsonLd = JSON.stringify({
           if (!window.matchMedia('(hover: none)').matches) {
             window.addEventListener('touchmove', this._onTouchMove, { passive: false })
           }
-        }
-
-        onResize() {
-          this.setSize()
-          this.setLines()
-        }
-
-        onMouseMove(e: MouseEvent) {
-          this.updateMousePosition(e.pageX, e.pageY)
+          document.addEventListener('visibilitychange', this._onVisibility)
         }
 
         // Translate page coordinates into element-local coordinates
@@ -360,8 +344,8 @@ const jsonLd = JSON.stringify({
         // Sync the SVG canvas size to the element's bounding box
         setSize() {
           this.bounding = this.getBoundingClientRect()
-          ;(this.svg as HTMLElement).style.width = `${this.bounding.width}px`
-          ;(this.svg as HTMLElement).style.height = `${this.bounding.height}px`
+          ;(this.svg as unknown as HTMLElement).style.width = `${this.bounding.width}px`
+          ;(this.svg as unknown as HTMLElement).style.height = `${this.bounding.height}px`
         }
 
         // Build the point grid and create one SVG <path> per vertical line
@@ -386,7 +370,7 @@ const jsonLd = JSON.stringify({
               points.push({
                 x: xStart + WAVES.lineGapX * i,
                 y: yStart + WAVES.lineGapY * j,
-                wave: { x: 0, y: 0 },       // Perlin-driven displacement
+                wave: { x: 0, y: 0 },              // Perlin-driven displacement
                 cursor: { x: 0, y: 0, vx: 0, vy: 0 }, // Physics-driven displacement
               })
             }
@@ -400,9 +384,20 @@ const jsonLd = JSON.stringify({
 
         // Apply Perlin wave drift and cursor spring physics to every grid point
         movePoints(time: number) {
-          const { lines, mouse, noise } = this
-          lines.forEach(points => {
-            points.forEach(p => {
+          const { lines, noise } = this
+          const { mouse } = this
+          // Cache hot mouse properties to avoid repeated object lookups in tight loop
+          const msx = mouse.sx, msy = mouse.sy, ma = mouse.a, mvs = mouse.vs
+          const mouseActive = mouse.set
+          // Pre-compute cursor radius and its square for cheap proximity pre-check
+          const radius = Math.max(CURSOR.radius, mvs)
+          const radiusSq = radius * radius
+
+          for (let li = 0; li < lines.length; li++) {
+            const points = lines[li]
+            for (let pi = 0; pi < points.length; pi++) {
+              const p = points[pi]
+
               // Sample Perlin field — result drives a cos/sin orbit for the point
               const move = noise.perlin2(
                 (p.x + time * WAVES.speedX) * WAVES.noiseScaleX,
@@ -411,20 +406,22 @@ const jsonLd = JSON.stringify({
               p.wave.x = Math.cos(move) * WAVES.waveX
               p.wave.y = Math.sin(move) * WAVES.waveY
 
-              // Cursor repulsion: scale force by proximity and cursor velocity
-              const dx = p.x - mouse.sx, dy = p.y - mouse.sy
-              const d = Math.hypot(dx, dy)
-              const l = Math.max(CURSOR.radius, mouse.vs)  // radius grows with speed
-              if (d < l) {
-                const s = 1 - d / l                        // 1 at center, 0 at edge
-                const f = Math.cos(d * 0.001) * s
-                p.cursor.vx += Math.cos(mouse.a) * f * l * mouse.vs * CURSOR.strength
-                p.cursor.vy += Math.sin(mouse.a) * f * l * mouse.vs * CURSOR.strength
+              if (mouseActive) {
+                const dx = p.x - msx, dy = p.y - msy
+                // Squared-distance check avoids sqrt for the majority of far-away points
+                const distSq = dx * dx + dy * dy
+                if (distSq < radiusSq) {
+                  const d = Math.sqrt(distSq)
+                  const s = 1 - d / radius            // 1 at center, 0 at edge
+                  const f = Math.cos(d * 0.001) * s
+                  p.cursor.vx += Math.cos(ma) * f * radius * mvs * CURSOR.strength
+                  p.cursor.vy += Math.sin(ma) * f * radius * mvs * CURSOR.strength
+                }
               }
 
               // Spring: pull displaced point back toward its rest position
-              p.cursor.vx += (0 - p.cursor.x) * CURSOR.tension
-              p.cursor.vy += (0 - p.cursor.y) * CURSOR.tension
+              p.cursor.vx += -p.cursor.x * CURSOR.tension
+              p.cursor.vy += -p.cursor.y * CURSOR.tension
 
               // Friction: bleed off velocity each frame
               p.cursor.vx *= CURSOR.friction
@@ -437,31 +434,29 @@ const jsonLd = JSON.stringify({
               // Clamp to prevent runaway displacement
               p.cursor.x = Math.min(CURSOR.maxDisplace, Math.max(-CURSOR.maxDisplace, p.cursor.x))
               p.cursor.y = Math.min(CURSOR.maxDisplace, Math.max(-CURSOR.maxDisplace, p.cursor.y))
-            })
-          })
-        }
-
-        // Return the final screen coordinates of a point (wave + optional cursor offset)
-        moved(point: any, withCursorForce = true) {
-          return {
-            x: Math.round((point.x + point.wave.x + (withCursorForce ? point.cursor.x : 0)) * 10) / 10,
-            y: Math.round((point.y + point.wave.y + (withCursorForce ? point.cursor.y : 0)) * 10) / 10,
+            }
           }
         }
 
         // Write the SVG path `d` attribute for each line from its moved points
         drawLines() {
           const { lines, paths } = this
-          lines.forEach((points, lIndex) => {
+          for (let li = 0; li < lines.length; li++) {
+            const points = lines[li]
+            const last = points.length - 1
             // First point: move-to without cursor force (anchors the path start cleanly)
-            let d = `M ${this.moved(points[0], false).x} ${this.moved(points[0], false).y}`
-            points.forEach((p1, pIndex) => {
-              const isLast = pIndex === points.length - 1
-              const mp1 = this.moved(p1, !isLast)  // last point also excludes cursor force
-              d += ` L ${mp1.x} ${mp1.y}`
-            })
-            paths[lIndex].setAttribute('d', d)
-          })
+            const p0 = points[0]
+            // Array join avoids repeated intermediate string allocation from +=
+            const parts: string[] = [`M ${Math.round(p0.x + p0.wave.x)} ${Math.round(p0.y + p0.wave.y)}`]
+            for (let pi = 0; pi <= last; pi++) {
+              const p = points[pi]
+              // Last point also excludes cursor force
+              const cx = pi !== last ? p.cursor.x : 0
+              const cy = pi !== last ? p.cursor.y : 0
+              parts.push(`L ${Math.round(p.x + p.wave.x + cx)} ${Math.round(p.y + p.wave.y + cy)}`)
+            }
+            paths[li].setAttribute('d', parts.join(' '))
+          }
         }
 
         // Main animation loop — runs every frame via requestAnimationFrame
@@ -481,13 +476,17 @@ const jsonLd = JSON.stringify({
           mouse.lx = mouse.x; mouse.ly = mouse.y
           mouse.a = Math.atan2(dy, dx)  // cursor direction angle
 
-          // Expose smoothed cursor position as CSS vars (used by the ::before dot)
-          this.style.setProperty('--x', `${mouse.sx}px`)
-          this.style.setProperty('--y', `${mouse.sy}px`)
+          // Only write CSS vars when the rounded value actually changes
+          const sx = Math.round(mouse.sx), sy = Math.round(mouse.sy)
+          if (sx !== this._lastSx || sy !== this._lastSy) {
+            this.style.setProperty('--x', `${sx}px`)
+            this.style.setProperty('--y', `${sy}px`)
+            this._lastSx = sx; this._lastSy = sy
+          }
 
           this.movePoints(time)
           this.drawLines()
-          this._raf = requestAnimationFrame(this.tick.bind(this))
+          this._raf = requestAnimationFrame(this._boundTick)
         }
       }
 
