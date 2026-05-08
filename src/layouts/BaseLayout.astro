@@ -68,6 +68,22 @@ const jsonLd = JSON.stringify({
     <!-- Structured data -->
     <script is:inline type="application/ld+json" set:html={jsonLd} />
 
+    <!-- Google tag (gtag.js) -->
+    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-FXCP48699X"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-FXCP48699X', { send_page_view: false });
+      // Re-send pageview on every Astro client-side navigation
+      document.addEventListener('astro:page-load', () => {
+        gtag('event', 'page_view', {
+          page_location: window.location.href,
+          page_title: document.title,
+        });
+      });
+    </script>
+
     <link rel="preconnect" href="https://use.typekit.net" crossorigin />
     <link rel="preconnect" href="https://p.typekit.net" crossorigin />
     <link rel="stylesheet" href="https://use.typekit.net/ynz8mng.css" />
