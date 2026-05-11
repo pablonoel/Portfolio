@@ -11,7 +11,7 @@ import ArticleLayout from '../../../layouts/ArticleLayout.astro'
 
   <div class="box overview">
     <h3 id="overview">Overview</h3>
-    <p>Florida's rapid growth requires a significant increase in new housing to keep its communities competitive and welcoming. The Florida Apartment Association (FAA) aimed to present clear and comprehensive data to the community and policymakers, ensuring that they understand crucial housing issues and make informed decisions. The objective was to make the data accessible and understandable for everyone, not just researchers.</p>
+    <p>Led design and frontend engineering for a public-facing data dashboard commissioned by the Florida Apartment Association — translating large volumes of housing and demographic data into an interactive, accessible tool for researchers, policymakers, and the general public. Work covered the full design process: from stakeholder research and information architecture through to a custom design system, interactive maps, and a CMS-managed frontend.</p>
     <ul class="sheet">
       <li><strong>Website:</strong> <a href="https://www.buildflorida2030.com/">buildflorida2030.com</a></li>
       <li><strong>Client:</strong> <a href="https://www.hraadvisors.com/">HR&A Advisors</a> and <a href="https://www.faahq.org/">Florida Apartment Association</a></li>
@@ -19,7 +19,6 @@ import ArticleLayout from '../../../layouts/ArticleLayout.astro'
       <li><strong>Tools:</strong> Figma, Jira, Github, ReactJS, SASS</li>
       <li><strong>Year:</strong> 2022</li>
     </ul>
-    <a href="#outcomes">↓ Jump to the outcomes</a>
   </div>
 
   <figure class="media video">
@@ -29,18 +28,10 @@ import ArticleLayout from '../../../layouts/ArticleLayout.astro'
   </figure>
 
   <div class="box">
-    <h3>Challenges</h3>
-    <ol>
-      <li>Data can be hard to interpret if it is not presented in a thoughtful and structured way. Information should be presented in context and be unbiased as possible.</li>
-      <li>Information can be overwhelming if too much is presented at once.</li>
-    </ol>
-
-    <h3>Opportunities</h3>
-    <ol>
-      <li>Enable greater user engagement through a playful, empathetic approach to visually dense information through custom, interactive maps.</li>
-      <li>Encourage users to explore and discover information across different geographic contexts.</li>
-      <li>Allow the client to manage all their data and modify the information presented using reusable custom components.</li>
-    </ol>
+    <h3>Context</h3>
+    <p>Florida's rapid population growth had created a significant housing shortage, and the Florida Apartment Association needed a public-facing tool to make that case clearly — to community members, journalists, and policymakers who don't typically engage with raw datasets. The data existed; the challenge was making it legible, trustworthy, and worth exploring.</p>
+    <h3>Problem</h3>
+    <p>Data presented without structure or context is easy to misread or ignore. The FAA had an abundance of housing and demographic data, but no way to present it that was both honest about complexity and accessible to a non-specialist audience. The risk was a dashboard that researchers could navigate but everyone else would bounce from — or one simplified to the point of being misleading.</p>
   </div>
 
   <figure class="media image">
@@ -49,28 +40,11 @@ import ArticleLayout from '../../../layouts/ArticleLayout.astro'
   </figure>
 
   <div class="box">
-    <h3>Methodologies</h3>
-    <p>As Lead Product Designer on this project, I did the following:</p>
-    <ul>
-      <li>Interviewed relevant stakeholders to understand requirements and define OKRs.</li>
-      <li>Researched best practices in data visualization tools and technologies, focusing on maps and graphs.</li>
-      <li>Defined users, created user flows and mapped out information architecture.</li>
-      <li>Created the style guide, design language and system from atomic elements to components.</li>
-      <li>Developed low-fi prototypes using Figma.</li>
-      <li>Developed the frontend (ReactJS, NextJS, SASS). Collaborated with backend engineers to integrate the frontend with the CMS.</li>
-      <li>Tested with alpha and beta users for accessibility and usability.</li>
-      <li>Fine-tuned the final product, adding custom interactions and fully responsive behaviour.</li>
-    </ul>
-  </div>
-
-  <div class="box">
-    <h3>Discoveries</h3>
-    <h5>Simple is best</h5>
-    <p>There were 3 different user personas: researchers, policymakers, and the general public. We defined the relevant metrics for each user; while they shared the same core needs, some users needed more advanced functionality than others. Our solution was to simplify the amount of information initially presented, while inviting the user to explore further, if desired.</p>
-    <h5>Design for scalability</h5>
-    <p>Our design needed to account for additional data being added in the future. Our first iteration of the map component aimed for a simple interface with just one dimension of information. However, as we conducted user research, it became clear that we needed to accommodate multiple dimensions of data projected over the map.</p>
-    <h5>Create meaningful interactions</h5>
-    <p>We created interactions and visual aids to help users navigate through information-dense interfaces.</p>
+    <h3>Process</h3>
+    <p>The project started with stakeholder interviews to align on requirements and define measurable goals, followed by user research to map out three distinct personas — researchers, policymakers, and the general public. While all three shared the same core data needs, their depth requirements differed significantly. That finding shaped the primary interaction model: present the simplest useful view first, and invite users deeper on their own terms rather than front-loading complexity.</p>
+    <p>From there, the work moved into information architecture, a custom design system built from atomic elements up to components, and low-fidelity prototyping before any visual decisions were locked in. The map component went through a significant design revision during user testing — the first iteration handled one dimension of data cleanly, but real-world testing made clear it needed to support multiple overlapping dimensions. That constraint drove the final choropleth approach: county-level data with contextual overlays and census-track specifics accessible on demand.</p>
+    <h3>Design System & Visual Language</h3>
+    <p>A custom design system was built from scratch to serve the density and interactivity requirements of the platform. Typography, spacing, color, and component behavior were defined as a cohesive system — not assembled ad hoc. Color carried semantic weight throughout: distinguishing geographic levels, signaling data ranges, and maintaining readability against map backgrounds. The system was designed to accommodate future data additions without requiring redesign.</p>
   </div>
 
   <figure class="media image">
@@ -79,19 +53,12 @@ import ArticleLayout from '../../../layouts/ArticleLayout.astro'
   </figure>
 
   <div class="box">
-    <h3 id="outcomes">Outcomes</h3>
-    <p>We delivered a responsive platform that displays a range of demographic data in a custom, interactive map. Users can explore data at the state, county and metro area level, as well as compare indicators across geographies.</p>
-    <p>All content is managed through a tailored CMS for quick and easy content creation and data updating.</p>
-    <p>Users can export and print data tables and graphs for use in their own presentations, a feature particularly useful for journalists and policy advocates.</p>
-  </div>
-
-  <div class="box">
-    <h3>Learnings</h3>
-    <ul class="items">
-      <li><strong>Minimalism has its place; so does clutter</strong> Our initial vision for the map was beautiful and minimalist. Our client loved the look and feel; however, as we tested with actual data, we learned that more geographical references were needed to provide accurate context for users. So, we created two versions: one simple and minimalist version to serve as an overview, and another that contained more geographical context.</li>
-      <li><strong>Data needs to tell a story</strong> We received an enormous amount of data at the beginning of the project. Before we could begin to create visual designs, we needed to clean, organize and understand this data. Through this process, we were able to extract the insights we needed to propose a compelling story.</li>
-      <li><strong>Give users control</strong> Users can be overwhelmed when presented with enormous amounts of data. We need to provide users with a coherent and consistent interface in which they can interact with the data within clearly defined actions amid well-defined boundaries.</li>
-    </ul>
+    <h3>Collaboration</h3>
+    <p>Worked closely with HR&A Advisors on the data and policy framing — ensuring that what was visualized was accurate and defensible, not just legible. Backend collaboration covered CMS integration, making it possible for the FAA team to update data and content independently after launch. Alpha and beta testing rounds with real users shaped final interaction decisions, particularly around map context and data export.</p>
+    <h3>Outcome</h3>
+    <p>A fully responsive platform where users can explore housing data at state, county, and metro area level — comparing indicators across geographies through interactive maps and exportable charts. All content is managed through a tailored CMS, giving the FAA team ongoing control without developer dependency. Export and print functionality made the tool directly useful for journalists and policy advocates preparing their own materials.</p>
+    <h3>Reflection</h3>
+    <p>The hardest call was on the map. The initial vision was deliberately minimal — and it worked aesthetically — but testing with real data showed it lacked the geographic references users needed to orient themselves. The solution was two versions: a clean overview and a context-rich detail view. That tension between minimalism and legibility doesn't fully resolve; it gets managed. The other lesson came earlier: before any visual design was possible, the data itself had to be cleaned, organized, and understood. The story only became clear once the data did.</p>
   </div>
 
 </ArticleLayout>
