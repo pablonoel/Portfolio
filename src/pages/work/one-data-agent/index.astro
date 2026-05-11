@@ -50,7 +50,7 @@ import ArticleLayout from '../../../layouts/ArticleLayout.astro'
   <div class="box">
     <h3>AI Chat Interface</h3>
     <p>The chat interface was designed around a single constraint: every answer had to be verifiable without making verification feel like homework. In a tool where trust is the product, source attribution couldn't be a footnote — but it also couldn't fragment the reading experience into a wall of citations.</p>
-    <p>The solution was a layered disclosure model: responses surface clean, plain-language answers first, with sources available inline but visually subordinate — accessible on demand rather than forced on every read. AI responses were streamed and rendered via <code>react-markdown</code> with <code>remark-gfm</code> and <code>rehype-raw</code>, giving the interface fine-grained control over how structured data, tables, and prose coexisted in a single response. <code>eventsource-parser</code> handled the streaming layer, keeping the interface alive and progressive during data retrieval. Loading states and latency were treated as interaction design problems — animation and progressive rendering maintained forward momentum during queries, keeping the interface feeling alive rather than stalled.</p>
+    <p>The solution was a layered disclosure model: responses surface clean, plain-language answers first, with sources available inline but visually subordinate — accessible on demand rather than forced on every read. Responses streamed progressively, with structured data, tables, and prose coexisting in a single answer without competing for attention. Loading states and latency were treated as interaction design problems — animation and progressive rendering maintained forward momentum during queries, keeping the interface feeling alive rather than stalled.</p>
   </div>
 
   <figure class="media image">
@@ -60,8 +60,8 @@ import ArticleLayout from '../../../layouts/ArticleLayout.astro'
 
   <div class="box">
     <h3>Data Visualization & Graph Layer</h3>
-    <p>Charts were rendered via <code>@flourish/live-api</code>, with <code>DuckDB-WASM</code> doing in-browser analytical queries against large datasets — meaning significant data processing happened client-side without a server round trip. The design challenge was making Flourish visualizations feel native to the interface rather than embedded from outside: chart entry, labeling, and source linkage were treated as interface moments, not just data outputs.</p>
-    <p>Tabular data was handled by AG Grid, carrying the heavy lifting for large, filterable datasets while staying visually consistent with the broader design system built on Radix UI primitives and Tailwind. Algolia powered search across the data catalog via <code>react-instantsearch</code>.</p>
+    <p>The core design challenge for charts was making visualizations feel native rather than embedded from elsewhere — animation, labeling, and source attribution were treated as deliberate interface moments, not decoration. Responses could contain structured tables alongside prose, keeping data scannable without fragmenting the reading experience.</p>
+    <p>The data catalog was searchable and filterable, built around the assumption that users arrive with a question, not a dataset. Findability was a first-class concern: the interface had to support both directed queries and exploratory browsing without making either feel like a workaround.</p>
   </div>
 
   <figure class="media image">
@@ -73,7 +73,7 @@ import ArticleLayout from '../../../layouts/ArticleLayout.astro'
     <h3>Outcome</h3>
     <p>A tool up to 60× faster than traditional data gathering, with linked sources on every output — making it auditable by design. Deployed publicly at <a href="https://data.one.org/tools/agents/health-financing">data.one.org/tools/agents/health-financing</a>.</p>
     <h3>Reflection</h3>
-    <p>The hardest problem wasn't technical — it was calibrating how confident the interface should feel. AI tools that feel too certain erode trust when they're wrong; too hedged and they feel useless. That tonal design question never fully resolves, and it's where I'd invest more time earlier in any project of this kind. The most architecturally interesting decision in the stack — DuckDB-WASM running analytical queries in the browser — also quietly solved a trust problem: less data leaving the client means fewer failure points between the user and the answer.</p>
+    <p>The hardest problem wasn't technical — it was calibrating how confident the interface should feel. AI tools that feel too certain erode trust when they're wrong; too hedged and they feel useless. That tonal design question never fully resolves, and it's where I'd invest more time earlier in any project of this kind. One architectural decision also turned out to be a trust decision: keeping more data processing on the client side meant fewer failure points between the user and their answer.</p>
   </div>
 
 </ArticleLayout>
